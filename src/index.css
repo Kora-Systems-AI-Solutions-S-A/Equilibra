@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@theme {
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary: #4ade80;
+  --color-primary-hover: #22c55e;
+  --color-primary-active: #16a34a;
+  --color-background-light: #f6f8f6;
+  --color-background-dark: #102216;
+  --color-dark-graphite: #1a1c1a;
+  
+  --radius-DEFAULT: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background-light font-display text-slate-900 overflow-hidden;
+  }
+
+  .modal-theme {
+    --modal-bg: #1a1c1a;
+    --modal-surface: #252825;
+    --modal-text: #f8fafc;
+    --modal-muted: #94a3b8;
+    --modal-border: #334155;
+    --modal-accent: #4ade80;
+    --modal-accent-hover: #22c55e;
+    --modal-danger: #ef4444;
+    --modal-overlay: rgba(0, 0, 0, 0.65);
+  }
+
+  .btn-green {
+    @apply bg-primary text-[#111111] font-bold transition-all duration-200 ease-in-out hover:bg-primary-hover active:bg-primary-active active:scale-[0.98] shadow-md hover:shadow-lg;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
