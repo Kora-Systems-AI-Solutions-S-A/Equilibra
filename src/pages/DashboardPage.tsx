@@ -18,8 +18,8 @@ export const DashboardPage = () => {
     <div className="w-full">
       <HeaderActions />
       <div className="w-full">
-        <div className="max-w-[1440px] mx-auto px-10 pb-10">
-          <div className="grid grid-cols-2 gap-6 mb-8">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-10 pb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
             <DebtPlanningCard />
             <IncomeCard />
           </div>

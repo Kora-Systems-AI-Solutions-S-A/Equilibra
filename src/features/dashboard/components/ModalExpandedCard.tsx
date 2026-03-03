@@ -1,13 +1,32 @@
 import React from 'react';
 import { useUIStore } from '@/store/ui.store';
 import { ModalBase } from '@/components/ui/ModalBase';
-import { useDebtPlansStore } from '@/store/debtPlans.store';
+import { useDebtPlansStore, DebtPlan } from '@/store/debtPlans.store';
 import { useTransactionsStore } from '@/store/transactions.store';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, MoreHorizontal } from 'lucide-react';
 
 import { useInvestmentsStore } from '@/store/investments.store';
+
+const priorityWeight = {
+  'Alta': 3,
+  'Média': 2,
+  'Baixa': 1
+};
+
+const sortPlansForDashboard = (plans: DebtPlan[]) => {
+  return [...plans].sort((a, b) => {
+    const aConcluded = a.progressPercent === 100;
+    const bConcluded = b.progressPercent === 100;
+
+    if (aConcluded !== bConcluded) {
+      return aConcluded ? 1 : -1;
+    }
+
+    return priorityWeight[b.priority] - priorityWeight[a.priority];
+  });
+};
 
 export const ModalExpandedCard = () => {
   const { expandedModal, closeExpandedModal, openPlanDrawer, openInvestmentContributionModal } = useUIStore();
@@ -79,7 +98,8 @@ export const ModalExpandedCard = () => {
 
   const renderDebtsContent = () => {
     const totalDivida = plans.reduce((acc, p) => acc + p.totalValue, 0);
-    const mediaPaga = plans.reduce((acc, p) => acc + p.paidPercentage, 0) / plans.length;
+    const mediaPaga = plans.length > 0 ? plans.reduce((acc, p) => acc + p.progressPercent, 0) / plans.length : 0;
+    const sortedPlans = sortPlansForDashboard(plans);
 
     return (
       <div className="flex flex-col gap-8">
@@ -97,11 +117,21 @@ export const ModalExpandedCard = () => {
         <div className="flex flex-col gap-4">
           <h4 className="text-sm font-bold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todos os Planos Ativos</h4>
           <div className="grid grid-cols-1 gap-4">
-            {plans.map((plan) => (
+            {sortedPlans.map((plan) => (
               <div key={plan.id} className="p-6 rounded-2xl shadow-sm flex flex-col gap-4" style={{ backgroundColor: 'var(--modal-surface)', border: '1px solid var(--modal-border)' }}>
                 <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-lg font-bold" style={{ color: 'var(--modal-text)' }}>{plan.name}</p>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-3">
+                      <p className="text-lg font-bold" style={{ color: 'var(--modal-text)' }}>{plan.name}</p>
+                      <span className={cn(
+                        "px-2 py-0.5 rounded text-[9px] font-bold uppercase",
+                        plan.priority === 'Alta' ? "bg-red-100 text-red-600" :
+                        plan.priority === 'Média' ? "bg-orange-100 text-orange-600" :
+                        "bg-blue-100 text-blue-600"
+                      )}>
+                        {plan.priority}
+                      </span>
+                    </div>
                     <p className="text-xs" style={{ color: 'var(--modal-muted)' }}>Valor Total: {formatCurrency(plan.totalValue)}</p>
                   </div>
                   <Button variant="primary" size="md" onClick={() => {
@@ -112,10 +142,10 @@ export const ModalExpandedCard = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex-1 h-3 flex rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
-                    <div className="h-full" style={{ backgroundColor: 'var(--modal-accent)', width: `${plan.paidPercentage}%` }}></div>
-                    <div className="h-full" style={{ backgroundColor: 'var(--modal-danger)', width: `${100 - plan.paidPercentage}%` }}></div>
+                    <div className="h-full" style={{ backgroundColor: 'var(--modal-accent)', width: `${plan.progressPercent}%` }}></div>
+                    <div className="h-full" style={{ backgroundColor: 'var(--modal-danger)', width: `${100 - plan.progressPercent}%` }}></div>
                   </div>
-                  <span className="text-sm font-black" style={{ color: 'var(--modal-text)' }}>{plan.paidPercentage}%</span>
+                  <span className="text-sm font-black" style={{ color: 'var(--modal-text)' }}>{plan.progressPercent}%</span>
                 </div>
               </div>
             ))}

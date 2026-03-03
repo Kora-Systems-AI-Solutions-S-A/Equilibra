@@ -56,7 +56,7 @@ export const ModalBase = ({ isOpen, onClose, title, children, maxWidth = "max-w-
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className={cn(
-              "relative w-[90%] rounded-2xl shadow-2xl z-[1] overflow-hidden flex flex-col max-h-[85vh]",
+              "relative w-[calc(100%-24px)] md:w-[90%] rounded-2xl shadow-2xl z-[1] overflow-hidden flex flex-col max-h-[90vh] md:max-h-[85vh]",
               maxWidth,
               className
             )}

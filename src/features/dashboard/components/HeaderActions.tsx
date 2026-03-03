@@ -20,23 +20,24 @@ export const HeaderActions = () => {
 
   return (
     <header className="w-full bg-background-light shrink-0 z-10">
-      <div className="max-w-[1440px] mx-auto px-10 pt-6 pb-4">
-        <div className="flex flex-col gap-0.5 mb-6">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-10 pt-6 pb-4">
+        <div className="flex flex-col gap-0.5 mb-6 hidden sm:flex">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dashboard</h1>
           <p className="text-slate-500 text-sm">Controle financeiro em tempo real</p>
         </div>
-        <div className="flex justify-between items-center">
-          <div className="flex gap-4 relative">
+        <div className="flex flex-row justify-between items-center gap-4">
+          <div className="flex flex-row gap-2 sm:gap-4 relative">
             {/* Filters Button */}
             <div className="relative">
               <Button 
                 variant="outline" 
                 size="md"
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={cn("h-10", isFilterOpen ? 'bg-slate-50' : '')}
+                className={cn("h-10 px-3 sm:px-4", isFilterOpen ? 'bg-slate-50' : '')}
+                aria-label="Filtros"
               >
                 <SlidersHorizontal size={18} />
-                Filtros
+                <span className="hidden sm:inline ml-2">Filtros</span>
               </Button>
               <AnimatePresence>
                 {isFilterOpen && (
@@ -66,11 +67,12 @@ export const HeaderActions = () => {
                 variant="outline"
                 size="md"
                 onClick={() => setIsPeriodOpen(!isPeriodOpen)}
-                className={cn("h-10", isPeriodOpen ? 'bg-slate-50' : '')}
+                className={cn("h-10 px-3 sm:px-4", isPeriodOpen ? 'bg-slate-50' : '')}
+                aria-label={selectedPeriod}
               >
                 <CalendarDays size={18} className="text-primary" />
-                {selectedPeriod}
-                <ChevronDown size={18} className="ml-2" />
+                <span className="hidden sm:inline ml-2">{selectedPeriod}</span>
+                <ChevronDown size={18} className="ml-1 sm:ml-2" />
               </Button>
               <AnimatePresence>
                 {isPeriodOpen && (
@@ -99,9 +101,9 @@ export const HeaderActions = () => {
           </div>
 
           <div className="flex gap-4">
-            <Button variant="primary" size="md" className="h-10 px-8" onClick={openRegisterModal}>
+            <Button variant="primary" size="md" className="h-10 px-3 sm:px-8" onClick={openRegisterModal} aria-label="Registrar">
               <Plus size={20} strokeWidth={3} />
-              <span>Registrar</span>
+              <span className="hidden sm:inline ml-2">Registrar</span>
             </Button>
           </div>
         </div>

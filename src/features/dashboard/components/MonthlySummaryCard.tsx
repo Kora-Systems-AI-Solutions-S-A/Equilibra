@@ -11,7 +11,7 @@ export const MonthlySummaryCard = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-8">
-      <div className="px-8 py-6 flex justify-between items-start">
+      <div className="px-4 md:px-8 py-6 flex justify-between items-start">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-xl font-bold text-slate-900">Resumo do Mês</h2>
           <p className="text-sm text-slate-500">Visão consolidada do seu fluxo financeiro.</p>
@@ -24,7 +24,7 @@ export const MonthlySummaryCard = () => {
         </button>
       </div>
       
-      <div className="grid grid-cols-3 gap-8 px-8 py-8 bg-slate-50/30 border-b border-slate-100/50 min-h-[180px] items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-8 py-8 bg-slate-50/30 border-b border-slate-100/50 min-h-[180px] items-center">
         {/* Rendimentos vs Despesas */}
         <div className="flex items-center gap-4">
           <div className="relative w-[100px] h-[100px] shrink-0 flex items-center justify-center">
@@ -114,7 +114,8 @@ export const MonthlySummaryCard = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left">
+        {/* Desktop Table View */}
+        <table className="w-full text-left hidden sm:table">
           <thead>
             <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-50">
               <th className="px-8 py-3">Data</th>
@@ -144,6 +145,31 @@ export const MonthlySummaryCard = () => {
             ))}
           </tbody>
         </table>
+
+        {/* Mobile List View */}
+        <div className="sm:hidden divide-y divide-slate-50">
+          {displayedTransactions.map((t) => (
+            <div key={t.id} className="px-4 py-4 flex flex-col gap-2 hover:bg-slate-50 transition-colors">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-slate-900">{t.description}</span>
+                <span className="text-sm font-bold text-slate-900">{formatCurrency(t.value)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">
+                    {new Date(t.date).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
+                  </span>
+                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[9px] font-medium uppercase">
+                    {t.category}
+                  </span>
+                </div>
+                <button className="text-slate-400 hover:text-slate-600">
+                  <MoreHorizontal size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="py-4 px-6 bg-slate-50/50 text-center border-t border-slate-100/50">
         <a className="text-primary text-[10px] font-bold uppercase tracking-widest hover:underline" href="#">VER HISTÓRICO COMPLETO</a>

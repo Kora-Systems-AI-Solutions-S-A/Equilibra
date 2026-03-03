@@ -25,9 +25,9 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-10">
-      <div className="p-8 flex justify-between items-start">
+      <div className="p-6 md:p-8 flex justify-between items-start">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <h2 className="text-xl font-bold text-slate-900">Planos de Investimento</h2>
             <Button 
               variant="outline" 
@@ -48,11 +48,11 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
           <ArrowUpRight size={24} />
         </button>
       </div>
-      <div className="px-8 pb-8 flex flex-col gap-4">
+      <div className="px-4 md:px-8 pb-6 md:pb-8 flex flex-col gap-4">
         {investments.map((item) => {
           const Icon = iconMap[item.icon] || Globe;
           return (
-            <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+            <div key={item.id} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 gap-4">
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center`}>
                   <Icon size={24} />
