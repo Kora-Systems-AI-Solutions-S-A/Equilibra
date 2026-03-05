@@ -57,7 +57,7 @@ export const ModalExpandedCard = () => {
                     <Icon size={24} />
                   </div>
                   <div>
-                    <h4 className="font-bold" style={{ color: 'var(--modal-text)' }}>{inv.name}</h4>
+                    <h4 className="font-semibold" style={{ color: 'var(--modal-text)' }}>{inv.name}</h4>
                     <p className="text-sm font-black" style={{ color: 'var(--modal-text)' }}>{formatCurrency(inv.totalValue)}</p>
                   </div>
                 </div>
@@ -67,7 +67,7 @@ export const ModalExpandedCard = () => {
                   className="w-full"
                   onClick={() => openInvestmentContributionModal(inv.id)}
                 >
-                  REFORÇAR
+                  Reforçar
                 </Button>
               </div>
             );
@@ -115,14 +115,14 @@ export const ModalExpandedCard = () => {
         </div>
 
         <div className="flex flex-col gap-4">
-          <h4 className="text-sm font-bold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todos os Planos Ativos</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todos os Planos Ativos</h4>
           <div className="grid grid-cols-1 gap-4">
             {sortedPlans.map((plan) => (
               <div key={plan.id} className="p-6 rounded-2xl shadow-sm flex flex-col gap-4" style={{ backgroundColor: 'var(--modal-surface)', border: '1px solid var(--modal-border)' }}>
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-3">
-                      <p className="text-lg font-bold" style={{ color: 'var(--modal-text)' }}>{plan.name}</p>
+                      <p className="text-lg font-semibold" style={{ color: 'var(--modal-text)' }}>{plan.name}</p>
                       <span className={cn(
                         "px-2 py-0.5 rounded text-[9px] font-bold uppercase",
                         plan.priority === 'Alta' ? "bg-red-100 text-red-600" :
@@ -137,7 +137,7 @@ export const ModalExpandedCard = () => {
                   <Button variant="primary" size="md" onClick={() => {
                     openPlanDrawer(plan.id, 'modal');
                   }}>
-                    DETALHES DO PLANO
+                    Detalhes do plano
                   </Button>
                 </div>
                 <div className="flex items-center gap-4">
@@ -181,12 +181,12 @@ export const ModalExpandedCard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-4">
-            <h4 className="text-sm font-bold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Histórico de Entradas</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Histórico de Entradas</h4>
             <div className="flex flex-col gap-3">
               {recentIncomes.map((income) => (
                 <div key={income.id} className="flex justify-between items-center p-4 rounded-xl border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
                   <div>
-                    <p className="text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{income.source}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{income.source}</p>
                     <p className="text-[10px]" style={{ color: 'var(--modal-muted)' }}>{income.date}</p>
                   </div>
                   <div className="text-right">
@@ -200,7 +200,7 @@ export const ModalExpandedCard = () => {
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <h4 className="text-sm font-bold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Projeção Próximo Mês</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Projeção Próximo Mês</h4>
             <div className="p-6 rounded-2xl flex flex-col gap-6" style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)' }}>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--modal-muted)' }}>Estimativa de Recebimento</p>
@@ -233,7 +233,7 @@ export const ModalExpandedCard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Rendimentos vs Despesas */}
           <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center gap-4 border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
-            <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Fluxo de Caixa</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Fluxo de Caixa</h4>
             <div className="relative w-[160px] h-[160px] flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" fill="transparent" r="16" stroke="rgba(255,255,255,0.05)" strokeWidth="4"></circle>
@@ -259,7 +259,7 @@ export const ModalExpandedCard = () => {
 
           {/* Despesas por Categoria */}
           <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center gap-4 border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
-            <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Gastos por Categoria</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Gastos por Categoria</h4>
             <div className="relative w-[160px] h-[160px] flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" fill="transparent" r="16" stroke="rgba(255,255,255,0.05)" strokeWidth="4"></circle>
@@ -293,7 +293,7 @@ export const ModalExpandedCard = () => {
 
           {/* Tendência */}
           <div className="p-6 rounded-2xl shadow-sm flex flex-col gap-6 border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
-            <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Tendência (6 Meses)</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Tendência (6 Meses)</h4>
             <div className="flex-1 flex items-end gap-2 h-[120px]">
               {[40, 65, 45, 80, 55, 90].map((h, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-2">
@@ -315,8 +315,8 @@ export const ModalExpandedCard = () => {
 
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <h4 className="text-sm font-bold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todas as Transações</h4>
-            <Button variant="outline" size="sm">EXPORTAR CSV</Button>
+            <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todas as Transações</h4>
+            <Button variant="outline" size="sm">Exportar CSV</Button>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-sm border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
             <table className="w-full text-left">

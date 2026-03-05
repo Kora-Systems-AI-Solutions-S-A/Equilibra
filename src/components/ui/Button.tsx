@@ -17,19 +17,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'px-4 py-1.5 text-[10px] uppercase',
-      md: 'px-6 py-2.5 text-sm',
-      lg: 'px-10 py-3.5 text-[17px]',
-      icon: 'p-3',
+      sm: 'px-4 py-1.5 text-[10px] uppercase h-8',
+      md: 'px-5 py-2.5 text-sm h-10',
+      lg: 'px-8 py-3.5 text-base h-12',
+      icon: 'p-2.5',
     };
 
     return (
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center gap-2 rounded-full transition-all tracking-tight',
+          'inline-flex items-center justify-center gap-2 rounded-lg transition-all tracking-tight',
           variants[variant],
           size !== 'icon' && sizes[size as keyof typeof sizes],
+          variant === 'icon' && 'rounded-full',
           className
         )}
         {...props}

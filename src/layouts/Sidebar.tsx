@@ -98,8 +98,8 @@ export const Sidebar = () => {
                 title={!isMobile && sidebarCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group relative overflow-hidden',
-                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-white hover:bg-slate-800/50',
+                    'flex items-center gap-4 p-3.5 rounded-xl transition-all duration-200 group relative overflow-hidden',
+                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-white hover:bg-slate-800/40',
                     !isMobile && sidebarCollapsed ? 'justify-center' : 'justify-start'
                   )
                 }
@@ -152,7 +152,7 @@ export const Sidebar = () => {
                 </div>
                 <button 
                   onClick={() => alert('Configurações (em breve)')}
-                  className="text-slate-400 hover:text-white transition-all duration-200 p-1.5 hover:bg-slate-700/50 rounded-lg group-hover:scale-110"
+                  className="text-slate-400 hover:text-white transition-all duration-200 p-2 hover:bg-slate-700/40 rounded-lg active:scale-95"
                   title="Configurações"
                 >
                   <Settings size={18} />

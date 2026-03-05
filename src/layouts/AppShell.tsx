@@ -384,7 +384,7 @@ export const AppShell = () => {
                 <span className="text-sm font-bold text-green-600 uppercase">Plano concluído</span>
               </div>
             ) : (
-              <Button className="mt-auto" onClick={handleRegisterPayment}>Registrar Pagamento</Button>
+              <Button className="mt-auto" onClick={handleRegisterPayment}>Registrar pagamento</Button>
             )}
           </div>
         )}

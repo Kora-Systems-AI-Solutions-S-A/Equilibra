@@ -55,10 +55,10 @@ export const DrawerBase = ({ isOpen, onClose, title, children }: DrawerBaseProps
               className="p-6 border-b flex justify-between items-center"
               style={{ borderColor: 'var(--modal-border)' }}
             >
-              <h3 className="text-xl font-bold" style={{ color: 'var(--modal-text)' }}>{title}</h3>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--modal-text)' }}>{title}</h3>
               <button 
                 onClick={onClose} 
-                className="transition-colors"
+                className="transition-colors hover:opacity-70"
                 style={{ color: 'var(--modal-muted)' }}
               >
                 <X size={24} />

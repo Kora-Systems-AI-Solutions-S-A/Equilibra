@@ -32,14 +32,14 @@ export const DebtPlanningCard = () => {
   const sortedPlans = sortPlansForDashboard(plans);
 
   return (
-    <div className="bg-white rounded-xl p-6 md:p-8 shadow-sm border border-slate-100 relative flex flex-col min-h-[288px]">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">Planejamento de Dívidas</h3>
+    <div className="bg-white rounded-xl p-6 md:p-8 pb-20 md:pb-20 shadow-sm border border-slate-100 relative flex flex-col min-h-[288px]">
+      <div className="flex justify-between items-start mb-6">
+        <h3 className="text-slate-900 text-lg font-semibold">Planejamento de Dívidas</h3>
         <button 
           onClick={() => openExpandedModal('debts')}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <ArrowUpRight size={20} />
+          <ArrowUpRight size={24} />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto pr-2 max-h-[160px] scrollbar-hide">
@@ -48,7 +48,7 @@ export const DebtPlanningCard = () => {
             <div key={plan.id} className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-bold text-slate-800">{plan.name}</p>
+                  <p className="text-sm font-semibold text-slate-800">{plan.name}</p>
                   <span className={cn(
                     "text-[9px] font-bold uppercase w-fit",
                     plan.priority === 'Alta' ? "text-red-500" :
@@ -59,7 +59,7 @@ export const DebtPlanningCard = () => {
                   </span>
                 </div>
                 <Button variant="primary" size="sm" onClick={() => openPlanDrawer(plan.id, 'dashboard')}>
-                  VER PLANO
+                  Ver plano
                 </Button>
               </div>
               <div className="flex items-center gap-3">
@@ -74,13 +74,13 @@ export const DebtPlanningCard = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-6 right-6">
+      <div className="absolute bottom-5 right-4">
         <Tooltip content="Criar plano de quitação">
           <button 
             onClick={openAddPlanModal}
-            className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+            className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
           >
-            <Plus size={20} />
+            <Plus size={24} />
           </button>
         </Tooltip>
       </div>

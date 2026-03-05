@@ -20,20 +20,20 @@ export const MonthlySummaryCard = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-8">
-      <div className="px-4 md:px-8 py-6 flex justify-between items-start">
-        <div className="flex flex-col gap-0.5">
-          <h2 className="text-xl font-bold text-slate-900">Resumo do Mês</h2>
+      <div className="p-6 md:p-8 flex justify-between items-start">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold text-slate-900">Resumo do Mês</h2>
           <p className="text-sm text-slate-500">Visão consolidada do seu fluxo financeiro.</p>
         </div>
         <button 
           onClick={() => openExpandedModal('monthlySummary')}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <ArrowUpRight size={20} />
+          <ArrowUpRight size={24} />
         </button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-8 py-8 bg-slate-50/30 border-b border-slate-100/50 min-h-[180px] items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-6 md:px-8 py-8 bg-slate-50/30 border-b border-slate-100/50 min-h-[180px] items-center">
         {/* Rendimentos vs Despesas */}
         <div className="flex items-center gap-4">
           <div className="relative w-[100px] h-[100px] shrink-0 flex items-center justify-center">

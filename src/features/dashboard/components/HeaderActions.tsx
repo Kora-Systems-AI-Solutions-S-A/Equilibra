@@ -34,9 +34,9 @@ export const HeaderActions = () => {
 
   return (
     <header className="w-full bg-background-light shrink-0 z-10">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10 pt-6 pb-4">
-        <div className="flex flex-col gap-0.5 mb-6 hidden sm:flex">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dashboard</h1>
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 pt-8 pb-6">
+        <div className="flex flex-col gap-1 mb-8 hidden sm:flex">
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Dashboard</h1>
           <p className="text-slate-500 text-sm">Controle financeiro em tempo real</p>
         </div>
         <div className="flex flex-row justify-between items-center gap-4">

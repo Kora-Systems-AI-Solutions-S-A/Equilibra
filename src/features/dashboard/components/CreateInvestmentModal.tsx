@@ -103,10 +103,10 @@ export const CreateInvestmentModal = () => {
 
         <div className="flex gap-3 pt-2">
           <Button type="button" variant="outline" className="flex-1" onClick={closeCreateInvestmentModal}>
-            CANCELAR
+            Cancelar
           </Button>
           <Button type="submit" variant="primary" className="flex-1">
-            CRIAR INVESTIMENTO
+            Criar investimento
           </Button>
         </div>
       </form>

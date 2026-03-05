@@ -25,12 +25,10 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
   onCreateNewInvestment,
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 mb-10 relative overflow-visible flex flex-col min-h-[288px]">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 mb-10 relative overflow-visible flex flex-col min-h-[288px] pb-20 md:pb-20">
       <div className="p-6 md:p-8 flex justify-between items-start">
         <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-xl font-bold text-slate-900">Planos de Investimento</h2>
-          </div>
+          <h2 className="text-lg font-semibold text-slate-900">Planos de Investimento</h2>
           <p className="text-sm text-slate-500">Acompanhe e reforce seus objetivos financeiros.</p>
         </div>
         <button 
@@ -40,7 +38,7 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
           <ArrowUpRight size={24} />
         </button>
       </div>
-      <div className="px-4 md:px-8 pb-20 md:pb-20 flex flex-col gap-4 flex-1">
+      <div className="px-6 md:px-8 flex flex-col gap-4 flex-1">
         {investments.map((item) => {
           const Icon = iconMap[item.icon] || Globe;
           return (
@@ -50,14 +48,13 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
                   <Icon size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-800">{item.name}</h4>
+                  <h4 className="font-semibold text-slate-800">{item.name}</h4>
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-tight">{formatCurrency(item.totalValue)}</p>
                 </div>
               </div>
               <Button 
                 size="sm"
                 onClick={() => onReinforceInvestment(item.id)}
-                className="px-6 py-2 text-xs font-bold uppercase"
               >
                 Reforçar
               </Button>
@@ -66,13 +63,13 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
         })}
       </div>
 
-      <div className="absolute bottom-6 right-6">
+      <div className="absolute bottom-5 right-4">
         <Tooltip content="Criar novo investimento">
           <button 
             onClick={onCreateNewInvestment}
-            className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+            className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
           >
-            <Plus size={20} />
+            <Plus size={24} />
           </button>
         </Tooltip>
       </div>

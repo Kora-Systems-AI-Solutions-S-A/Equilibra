@@ -8,18 +8,18 @@ export const IncomeCard = () => {
     <div className="bg-white rounded-xl p-6 md:p-8 shadow-sm border border-slate-100 flex flex-col justify-between min-h-[288px]">
       <div className="flex justify-between items-start">
         <div className="flex flex-col gap-1">
-          <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">Entradas de Renda</h3>
-          <div className="flex flex-wrap items-baseline gap-2 mt-4">
+          <h3 className="text-slate-900 text-lg font-semibold">Entradas de Renda</h3>
+          <div className="flex items-baseline gap-2 mt-4">
             <span className="text-slate-400 text-lg font-medium">€</span>
-            <span className="text-4xl md:text-5xl font-black text-primary truncate">5.200,00</span>
+            <span className="text-4xl md:text-5xl font-black text-primary">5.200,00</span>
           </div>
-          <p className="text-xs text-primary font-medium mt-3 tracking-wide">RECEBIDO ESTE MÊS</p>
+          <p className="text-xs text-primary font-medium mt-3 tracking-wide uppercase">RECEBIDO ESTE MÊS</p>
         </div>
         <button 
           onClick={() => openExpandedModal('income')}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <ArrowUpRight size={20} />
+          <ArrowUpRight size={24} />
         </button>
       </div>
 
