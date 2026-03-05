@@ -57,22 +57,6 @@ export const Sidebar = () => {
         )}
       </AnimatePresence>
 
-      {/* Toggle Button - Floating Tab / Handle */}
-      <button 
-        onClick={handleToggle}
-        className={cn(
-          "fixed top-[36px] w-5 h-10 bg-dark-graphite border border-slate-800/50 border-l-0 rounded-r-lg flex items-center justify-center shadow-sm text-slate-400 hover:text-white hover:brightness-150 transition-all z-60",
-          isMobile 
-            ? (isMobileOpen ? "left-[280px]" : "left-0")
-            : (sidebarCollapsed ? "left-[84px]" : "left-[240px]")
-        )}
-      >
-        {isMobile 
-          ? (isMobileOpen ? <ChevronLeft size={12} strokeWidth={4} /> : <ChevronRight size={12} strokeWidth={4} />)
-          : (sidebarCollapsed ? <ChevronRight size={12} strokeWidth={4} /> : <ChevronLeft size={12} strokeWidth={4} />)
-        }
-      </button>
-
       <motion.aside 
         initial={false}
         animate={{ 
@@ -85,6 +69,19 @@ export const Sidebar = () => {
           isMobile && "shadow-2xl"
         )}
       >
+        {/* Toggle Button - Integrated Handle */}
+        <button 
+          onClick={handleToggle}
+          className={cn(
+            "absolute top-[36px] left-full w-5 h-10 bg-dark-graphite border border-slate-800/50 border-l-0 rounded-r-lg flex items-center justify-center shadow-sm text-slate-400 hover:text-white hover:brightness-150 transition-colors"
+          )}
+        >
+          {isMobile 
+            ? (isMobileOpen ? <ChevronLeft size={12} strokeWidth={4} /> : <ChevronRight size={12} strokeWidth={4} />)
+            : (sidebarCollapsed ? <ChevronRight size={12} strokeWidth={4} /> : <ChevronLeft size={12} strokeWidth={4} />)
+          }
+        </button>
+
         <div className="flex flex-col items-center w-full gap-10">
           <div className="flex items-center justify-center w-full px-6">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shrink-0">
