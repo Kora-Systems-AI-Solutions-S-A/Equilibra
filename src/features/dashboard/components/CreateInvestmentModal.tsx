@@ -6,6 +6,7 @@ import { useUIStore } from '@/store/ui.store';
 import { useInvestmentsStore } from '@/store/investments.store';
 import { ModalBase } from '@/components/ui/ModalBase';
 import { Button } from '@/components/ui/Button';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 
 const investmentSchema = z.object({
   name: z.string().min(1, 'O nome é obrigatório'),
@@ -24,6 +25,8 @@ export const CreateInvestmentModal = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<InvestmentFormValues>({
     resolver: zodResolver(investmentSchema),
@@ -77,18 +80,12 @@ export const CreateInvestmentModal = () => {
           {errors.type && <p className="text-[10px] text-red-500 font-bold">{errors.type.message}</p>}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Valor Inicial (€)</label>
-          <input
-            type="number"
-            step="0.01"
-            {...register('initialValue', { valueAsNumber: true })}
-            className="w-full p-3 rounded-xl outline-none transition-colors font-bold"
-            style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
-            placeholder="0,00"
-          />
-          {errors.initialValue && <p className="text-[10px] text-red-500 font-bold">{errors.initialValue.message}</p>}
-        </div>
+        <MoneyInput
+          label="Valor Inicial"
+          value={watch('initialValue') || 0}
+          onChange={(val) => setValue('initialValue', val)}
+          error={errors.initialValue?.message}
+        />
 
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Data de Início</label>

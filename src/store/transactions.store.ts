@@ -7,11 +7,13 @@ export interface Transaction {
   category: string;
   value: number;
   type: 'income' | 'expense';
+  status: 'Pago' | 'Pendente' | 'Recebido';
 }
 
 interface TransactionsState {
   transactions: Transaction[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
+  updateTransactionStatus: (id: string, status: Transaction['status']) => void;
 }
 
 export const useTransactionsStore = create<TransactionsState>((set) => ({
@@ -23,6 +25,7 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
       category: 'Habitação',
       value: 2400.00,
       type: 'expense',
+      status: 'Pago',
     },
     {
       id: '2',
@@ -31,6 +34,7 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
       category: 'Alimentação',
       value: 842.50,
       type: 'expense',
+      status: 'Pago',
     },
   ],
   addTransaction: (t) => set((state) => ({
@@ -38,5 +42,8 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
       { ...t, id: Math.random().toString(36).substring(7) },
       ...state.transactions,
     ],
+  })),
+  updateTransactionStatus: (id, status) => set((state) => ({
+    transactions: state.transactions.map(t => t.id === id ? { ...t, status } : t)
   })),
 }));

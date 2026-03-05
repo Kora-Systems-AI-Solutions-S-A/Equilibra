@@ -16,6 +16,7 @@ import { InvestmentContributionModal } from '@/features/dashboard/components/Inv
 import { CreateInvestmentModal } from '@/features/dashboard/components/CreateInvestmentModal';
 import { AppFooter } from './AppFooter';
 import { formatCurrency, cn } from '@/lib/utils';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 
 import { getCurrentMonthYear, addMonthsToMonthYear, getMonthsDifference, getMonthsBetween } from '@/lib/date';
 
@@ -24,6 +25,7 @@ const transactionSchema = z.object({
   value: z.number().min(0.01, 'Valor deve ser maior que zero'),
   category: z.string().min(1, 'Categoria é obrigatória'),
   type: z.enum(['income', 'expense']),
+  status: z.enum(['Pago', 'Pendente', 'Recebido']),
 });
 
 const planSchema = z.object({
@@ -64,8 +66,24 @@ export const AppShell = () => {
 
   const transactionForm = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { type: 'expense' }
+    defaultValues: { 
+      type: 'expense',
+      status: 'Pendente',
+      category: 'Habitação'
+    }
   });
+
+  const watchType = transactionForm.watch('type');
+
+  useEffect(() => {
+    if (watchType === 'income') {
+      transactionForm.setValue('status', 'Recebido');
+      transactionForm.setValue('category', 'Renda');
+    } else {
+      transactionForm.setValue('status', 'Pendente');
+      transactionForm.setValue('category', 'Habitação');
+    }
+  }, [watchType, transactionForm]);
 
   const planForm = useForm<z.infer<typeof planSchema>>({
     resolver: zodResolver(planSchema),
@@ -179,37 +197,6 @@ export const AppShell = () => {
       <ModalBase isOpen={isRegisterModalOpen} onClose={closeRegisterModal} title="Registrar Movimentação">
         <form onSubmit={transactionForm.handleSubmit(onTransactionSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Descrição</label>
-            <input 
-              {...transactionForm.register('description')} 
-              className="rounded-lg p-2 outline-none transition-all" 
-              style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Valor</label>
-            <input 
-              type="number" 
-              step="0.01" 
-              {...transactionForm.register('value', { valueAsNumber: true })} 
-              className="rounded-lg p-2 outline-none transition-all" 
-              style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Categoria</label>
-            <select 
-              {...transactionForm.register('category')} 
-              className="rounded-lg p-2 outline-none transition-all"
-              style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
-            >
-              <option value="Habitação">Habitação</option>
-              <option value="Alimentação">Alimentação</option>
-              <option value="Lazer">Lazer</option>
-              <option value="Renda">Renda</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Tipo</label>
             <select 
               {...transactionForm.register('type')} 
@@ -220,6 +207,80 @@ export const AppShell = () => {
               <option value="income">Receita</option>
             </select>
           </div>
+
+          {watchType === 'income' ? (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Origem</label>
+                <input 
+                  {...transactionForm.register('description')} 
+                  className="rounded-lg p-2 outline-none transition-all" 
+                  style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
+                />
+              </div>
+              <MoneyInput
+                label="Valor"
+                value={transactionForm.watch('value') || 0}
+                onChange={(val) => transactionForm.setValue('value', val)}
+                error={transactionForm.formState.errors.value?.message}
+              />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Situação</label>
+                <select 
+                  {...transactionForm.register('status')} 
+                  className="rounded-lg p-2 outline-none transition-all"
+                  style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
+                >
+                  <option value="Recebido">Recebido</option>
+                  <option value="Pendente">Pendente</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Descrição</label>
+                <input 
+                  {...transactionForm.register('description')} 
+                  className="rounded-lg p-2 outline-none transition-all" 
+                  style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Categoria</label>
+                <select 
+                  {...transactionForm.register('category')} 
+                  className="rounded-lg p-2 outline-none transition-all"
+                  style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
+                >
+                  <option value="Habitação">Habitação</option>
+                  <option value="Alimentação">Alimentação</option>
+                  <option value="Lazer">Lazer</option>
+                  <option value="Transporte">Transporte</option>
+                  <option value="Saúde">Saúde</option>
+                  <option value="Educação">Educação</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
+              <MoneyInput
+                label="Valor"
+                value={transactionForm.watch('value') || 0}
+                onChange={(val) => transactionForm.setValue('value', val)}
+                error={transactionForm.formState.errors.value?.message}
+              />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Situação</label>
+                <select 
+                  {...transactionForm.register('status')} 
+                  className="rounded-lg p-2 outline-none transition-all"
+                  style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
+                >
+                  <option value="Pago">Pago</option>
+                  <option value="Pendente">Pendente</option>
+                </select>
+              </div>
+            </>
+          )}
           <Button type="submit" className="mt-4">Salvar</Button>
         </form>
       </ModalBase>
@@ -234,24 +295,18 @@ export const AppShell = () => {
               style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Valor Total</label>
-            <input 
-              type="number" 
-              {...planForm.register('totalValue', { valueAsNumber: true })} 
-              className="rounded-lg p-2 outline-none transition-all" 
-              style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Valor Mensal a Pagar</label>
-            <input 
-              type="number" 
-              {...planForm.register('monthlyPayment', { valueAsNumber: true })} 
-              className="rounded-lg p-2 outline-none transition-all" 
-              style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
-            />
-          </div>
+          <MoneyInput
+            label="Valor Total"
+            value={planForm.watch('totalValue') || 0}
+            onChange={(val) => planForm.setValue('totalValue', val)}
+            error={planForm.formState.errors.totalValue?.message}
+          />
+          <MoneyInput
+            label="Valor Mensal a Pagar"
+            value={planForm.watch('monthlyPayment') || 0}
+            onChange={(val) => planForm.setValue('monthlyPayment', val)}
+            error={planForm.formState.errors.monthlyPayment?.message}
+          />
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Prioridade</label>
             <select 

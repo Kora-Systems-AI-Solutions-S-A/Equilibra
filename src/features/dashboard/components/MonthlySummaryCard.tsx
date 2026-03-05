@@ -7,6 +7,17 @@ export const MonthlySummaryCard = () => {
   const transactions = useTransactionsStore(s => s.transactions);
   const { openExpandedModal, dashboardFilters } = useUIStore();
 
+  const totalIncome = transactions.filter(t => t.type === 'income' && t.status === 'Recebido').reduce((acc, t) => acc + t.value, 0);
+  const totalExpense = transactions.filter(t => t.type === 'expense' && t.status === 'Pago').reduce((acc, t) => acc + t.value, 0);
+  const total = totalIncome + totalExpense;
+  const incomePercent = total > 0 ? (totalIncome / total) * 100 : 0;
+  const expensePercent = total > 0 ? (totalExpense / total) * 100 : 0;
+
+  const formatK = (val: number) => {
+    if (val >= 1000) return `€ ${(val / 1000).toFixed(1)}k`.replace('.', ',');
+    return formatCurrency(val);
+  };
+
   const filteredTransactions = transactions.filter(t => {
     // Filter by type
     if (!dashboardFilters.types.includes(t.type)) return false;
@@ -39,12 +50,12 @@ export const MonthlySummaryCard = () => {
           <div className="relative w-[100px] h-[100px] shrink-0 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <circle cx="18" cy="18" fill="transparent" r="16" stroke="#e2e8f0" strokeWidth="3.5"></circle>
-              <circle cx="18" cy="18" fill="transparent" r="16" stroke="#22C55E" strokeDasharray="70, 100" strokeLinecap="round" strokeWidth="3.5"></circle>
-              <circle cx="18" cy="18" fill="transparent" r="16" stroke="#EF4444" strokeDasharray="30, 100" strokeDashoffset="-70" strokeLinecap="round" strokeWidth="3.5"></circle>
+              <circle cx="18" cy="18" fill="transparent" r="16" stroke="#22C55E" strokeDasharray={`${incomePercent}, 100`} strokeLinecap="round" strokeWidth="3.5"></circle>
+              <circle cx="18" cy="18" fill="transparent" r="16" stroke="#EF4444" strokeDasharray={`${expensePercent}, 100`} strokeDashoffset={`-${incomePercent}`} strokeLinecap="round" strokeWidth="3.5"></circle>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[8px] font-bold text-slate-400 uppercase">Total</span>
-              <span className="text-[11px] font-black">€ 8,2k</span>
+              <span className="text-[11px] font-black">{formatK(total)}</span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -52,11 +63,11 @@ export const MonthlySummaryCard = () => {
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
-                <span className="text-[11px] font-medium text-slate-600">Rendimentos (70%)</span>
+                <span className="text-[11px] font-medium text-slate-600">Rendimentos ({incomePercent.toFixed(0)}%)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#EF4444]"></div>
-                <span className="text-[11px] font-medium text-slate-600">Despesas (30%)</span>
+                <span className="text-[11px] font-medium text-slate-600">Despesas ({expensePercent.toFixed(0)}%)</span>
               </div>
             </div>
           </div>
@@ -166,7 +177,7 @@ export const MonthlySummaryCard = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-500">
-                    {new Date(t.date).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
+                    {formatDate(t.date)}
                   </span>
                   <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[9px] font-medium uppercase">
                     {t.category}

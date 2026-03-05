@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useUIStore } from '@/store/ui.store';
 import { ModalBase } from '@/components/ui/ModalBase';
 import { useDebtPlansStore, DebtPlan } from '@/store/debtPlans.store';
 import { useTransactionsStore } from '@/store/transactions.store';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatEuro } from '@/lib/formatters/money';
 import { Button } from '@/components/ui/Button';
-import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, MoreHorizontal } from 'lucide-react';
+import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, MoreHorizontal, CheckCircle2, Filter } from 'lucide-react';
 
 import { useInvestmentsStore } from '@/store/investments.store';
 
@@ -31,8 +32,10 @@ const sortPlansForDashboard = (plans: DebtPlan[]) => {
 export const ModalExpandedCard = () => {
   const { expandedModal, closeExpandedModal, openPlanDrawer, openInvestmentContributionModal } = useUIStore();
   const plans = useDebtPlansStore(s => s.plans);
-  const transactions = useTransactionsStore(s => s.transactions);
+  const { transactions, updateTransactionStatus } = useTransactionsStore();
   const { investments } = useInvestmentsStore();
+
+  const [summaryFilter, setSummaryFilter] = useState<'Todos' | 'Pago' | 'Pendente'>('Todos');
 
   if (!expandedModal) return null;
 
@@ -156,19 +159,15 @@ export const ModalExpandedCard = () => {
   };
 
   const renderIncomeContent = () => {
-    const recentIncomes = [
-      { id: 1, source: 'Salário Mensal', value: 4000, date: '05 Out', status: 'Recebido' },
-      { id: 2, source: 'Freelance Design', value: 1200, date: '12 Out', status: 'Recebido' },
-      { id: 3, source: 'Dividendos FIIs', value: 450, date: '15 Out', status: 'Pendente' },
-      { id: 4, source: 'Venda de Ativos', value: 800, date: '20 Out', status: 'Pendente' },
-    ];
+    const incomeTransactions = transactions.filter(t => t.type === 'income');
+    const totalIncome = incomeTransactions.reduce((acc, t) => t.status === 'Recebido' ? acc + t.value : acc, 0);
 
     return (
       <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between p-8 rounded-2xl text-white" style={{ backgroundColor: 'var(--modal-accent)', color: '#000' }}>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ opacity: 0.7 }}>Total Recebido (Outubro)</p>
-            <p className="text-5xl font-black">€ 5.200,00</p>
+            <p className="text-5xl font-black">{formatEuro(totalIncome)}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
@@ -182,21 +181,36 @@ export const ModalExpandedCard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-4">
             <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Histórico de Entradas</h4>
-            <div className="flex flex-col gap-3">
-              {recentIncomes.map((income) => (
+            <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+              {incomeTransactions.map((income) => (
                 <div key={income.id} className="flex justify-between items-center p-4 rounded-xl border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{income.source}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--modal-muted)' }}>{income.date}</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{income.description}</p>
+                    <p className="text-[10px]" style={{ color: 'var(--modal-muted)' }}>{formatDate(income.date)}</p>
+                    {income.status === 'Pendente' && (
+                      <button 
+                        onClick={() => updateTransactionStatus(income.id, 'Recebido')}
+                        className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 mt-1"
+                      >
+                        <CheckCircle2 size={12} />
+                        Marcar como Recebido
+                      </button>
+                    )}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold" style={{ color: 'var(--modal-accent)' }}>{formatCurrency(income.value)}</p>
-                    <p className={`text-[9px] font-bold uppercase ${income.status === 'Recebido' ? 'text-green-400' : 'text-orange-400'}`}>
+                    <p className="text-sm font-bold" style={{ color: 'var(--modal-accent)' }}>{formatEuro(income.value)}</p>
+                    <p className={cn(
+                      "text-[9px] font-bold uppercase",
+                      income.status === 'Recebido' ? 'text-green-400' : 'text-orange-400'
+                    )}>
                       {income.status}
                     </p>
                   </div>
                 </div>
               ))}
+              {incomeTransactions.length === 0 && (
+                <p className="text-center py-8 text-sm text-slate-500">Nenhuma entrada registrada.</p>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-4">
@@ -228,9 +242,41 @@ export const ModalExpandedCard = () => {
   };
 
   const renderMonthlySummaryContent = () => {
+    const filteredTransactions = transactions.filter(t => {
+      if (summaryFilter === 'Todos') return true;
+      return t.status === summaryFilter;
+    });
+
+    const exportToCSV = () => {
+      const headers = ['Tipo', 'Data', 'Descrição/Origem', 'Categoria', 'Valor', 'Situação'];
+      const rows = transactions.map(t => [
+        t.type === 'income' ? 'Renda' : 'Despesa',
+        formatDate(t.date),
+        t.description,
+        t.category,
+        formatEuro(t.value).replace('€', '').trim(),
+        t.status
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(r => r.join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `resumo_mensal_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
     return (
-      <div className="flex flex-col gap-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col gap-8 h-full max-h-[80vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
           {/* Rendimentos vs Despesas */}
           <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center gap-4 border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
             <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Fluxo de Caixa</h4>
@@ -313,42 +359,88 @@ export const ModalExpandedCard = () => {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
+          <div className="flex justify-between items-center shrink-0">
             <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todas as Transações</h4>
-            <Button variant="outline" size="sm">Exportar CSV</Button>
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-sm border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] font-bold uppercase tracking-widest border-b" style={{ color: 'var(--modal-muted)', borderColor: 'var(--modal-border)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
-                  <th className="px-6 py-4">Data</th>
-                  <th className="px-6 py-4">Descrição</th>
-                  <th className="px-6 py-4">Categoria</th>
-                  <th className="px-6 py-4">Valor</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y" style={{ borderColor: 'var(--modal-border)' }}>
-                {transactions.map((t) => (
-                  <tr key={t.id} className="transition-colors" style={{ backgroundColor: 'transparent' }}>
-                    <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--modal-text)' }}>{formatDate(t.date)}</td>
-                    <td className="px-6 py-4 text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{t.description}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--modal-text)' }}>
-                        {t.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{formatCurrency(t.value)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button style={{ color: 'var(--modal-muted)' }} className="hover:opacity-80">
-                        <MoreHorizontal size={20} />
-                      </button>
-                    </td>
-                  </tr>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center bg-[var(--modal-surface)] border border-[var(--modal-border)] rounded-lg p-1">
+                {(['Todos', 'Pago', 'Pendente'] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setSummaryFilter(f)}
+                    className={cn(
+                      "px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all",
+                      summaryFilter === f 
+                        ? "bg-[var(--modal-accent)] text-black" 
+                        : "text-[var(--modal-muted)] hover:text-[var(--modal-text)]"
+                    )}
+                  >
+                    {f}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+              <Button variant="outline" size="sm" onClick={exportToCSV}>Exportar CSV</Button>
+            </div>
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-sm border flex flex-col flex-1 min-h-0" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
+            <div className="overflow-y-auto scrollbar-hide">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 z-10" style={{ backgroundColor: 'var(--modal-surface)' }}>
+                  <tr className="text-[10px] font-bold uppercase tracking-widest border-b" style={{ color: 'var(--modal-muted)', borderColor: 'var(--modal-border)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                    <th className="px-6 py-4">Data</th>
+                    <th className="px-6 py-4">Descrição</th>
+                    <th className="px-6 py-4">Categoria</th>
+                    <th className="px-6 py-4">Valor</th>
+                    <th className="px-6 py-4">Situação</th>
+                    <th className="px-6 py-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y" style={{ borderColor: 'var(--modal-border)' }}>
+                  {filteredTransactions.map((t) => (
+                    <tr key={t.id} className="transition-colors" style={{ backgroundColor: 'transparent' }}>
+                      <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--modal-text)' }}>{formatDate(t.date)}</td>
+                      <td className="px-6 py-4 text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{t.description}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--modal-text)' }}>
+                          {t.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{formatEuro(t.value)}</td>
+                      <td className="px-6 py-4">
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase",
+                          t.status === 'Pago' || t.status === 'Recebido' ? 'text-green-400' : 'text-orange-400'
+                        )}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end items-center gap-2">
+                          {t.status === 'Pendente' && (
+                            <button 
+                              onClick={() => updateTransactionStatus(t.id, t.type === 'income' ? 'Recebido' : 'Pago')}
+                              className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              Marcar como {t.type === 'income' ? 'Recebido' : 'Pago'}
+                            </button>
+                          )}
+                          <button style={{ color: 'var(--modal-muted)' }} className="hover:opacity-80">
+                            <MoreHorizontal size={20} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredTransactions.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-500">
+                        Nenhuma transação encontrada para este filtro.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
