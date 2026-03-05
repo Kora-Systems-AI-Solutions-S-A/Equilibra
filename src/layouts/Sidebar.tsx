@@ -98,16 +98,32 @@ export const Sidebar = () => {
                 title={!isMobile && sidebarCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-4 p-3 rounded-xl transition-colors group',
-                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-white',
+                    'flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group relative overflow-hidden',
+                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-white hover:bg-slate-800/50',
                     !isMobile && sidebarCollapsed ? 'justify-center' : 'justify-start'
                   )
                 }
               >
-                <item.icon size={24} />
-                {(isMobile || !sidebarCollapsed) && (
-                  <span className="font-medium whitespace-nowrap">{item.label}</span>
-                )}
+                <item.icon size={24} className="shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                <AnimatePresence mode="wait">
+                  {(isMobile || !sidebarCollapsed) && (
+                    <motion.span 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ 
+                        delay: isMobile ? 0 : 0.2, // Delay text appearance when opening
+                        duration: 0.2 
+                      }}
+                      className="font-medium whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                
+                {/* Subtle hover indicator */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary transition-all duration-200 group-hover:h-1/2 rounded-r-full" />
               </NavLink>
             ))}
           </nav>
@@ -136,7 +152,7 @@ export const Sidebar = () => {
                 </div>
                 <button 
                   onClick={() => alert('Configurações (em breve)')}
-                  className="text-slate-400 hover:text-white transition-colors p-1"
+                  className="text-slate-400 hover:text-white transition-all duration-200 p-1.5 hover:bg-slate-700/50 rounded-lg group-hover:scale-110"
                   title="Configurações"
                 >
                   <Settings size={18} />

@@ -5,9 +5,18 @@ import { useUIStore } from '@/store/ui.store';
 
 export const MonthlySummaryCard = () => {
   const transactions = useTransactionsStore(s => s.transactions);
-  const { openExpandedModal } = useUIStore();
+  const { openExpandedModal, dashboardFilters } = useUIStore();
 
-  const displayedTransactions = transactions.slice(0, 2);
+  const filteredTransactions = transactions.filter(t => {
+    // Filter by type
+    if (!dashboardFilters.types.includes(t.type)) return false;
+    
+    // Period filtering logic would go here if we had real dates and logic
+    // For now, we just filter by type as requested
+    return true;
+  });
+
+  const displayedTransactions = filteredTransactions.slice(0, 2);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-8">
@@ -170,9 +179,6 @@ export const MonthlySummaryCard = () => {
             </div>
           ))}
         </div>
-      </div>
-      <div className="py-4 px-6 bg-slate-50/50 text-center border-t border-slate-100/50">
-        <a className="text-primary text-[10px] font-bold uppercase tracking-widest hover:underline" href="#">VER HISTÓRICO COMPLETO</a>
       </div>
     </div>
   );

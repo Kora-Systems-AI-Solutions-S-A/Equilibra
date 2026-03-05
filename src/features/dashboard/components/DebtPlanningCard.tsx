@@ -4,6 +4,8 @@ import { useUIStore } from '@/store/ui.store';
 import { Button } from '@/components/ui/Button';
 import { ArrowUpRight, Plus } from 'lucide-react';
 
+import { Tooltip } from '@/components/ui/Tooltip';
+
 const priorityWeight = {
   'Alta': 3,
   'Média': 2,
@@ -72,12 +74,16 @@ export const DebtPlanningCard = () => {
         </div>
       </div>
 
-      <button 
-        onClick={openAddPlanModal}
-        className="absolute bottom-6 right-6 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-      >
-        <Plus size={20} />
-      </button>
+      <div className="absolute bottom-6 right-6">
+        <Tooltip content="Criar plano de quitação">
+          <button 
+            onClick={openAddPlanModal}
+            className="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+          >
+            <Plus size={20} />
+          </button>
+        </Tooltip>
+      </div>
     </div>
   );
 };

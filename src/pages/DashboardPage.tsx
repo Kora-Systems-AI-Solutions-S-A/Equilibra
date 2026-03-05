@@ -18,19 +18,24 @@ export const DashboardPage = () => {
     <div className="w-full">
       <HeaderActions />
       <div className="w-full">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-10 pb-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+        <div className="max-w-[clamp(1024px,92vw,1680px)] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 lg:gap-6 2xl:gap-8">
             <DebtPlanningCard />
             <IncomeCard />
+            
+            <div className="2xl:row-span-2">
+              <InvestmentsCard 
+                investments={investments}
+                onExpandInvestment={handleExpandInvestment}
+                onReinforceInvestment={handleReinforceInvestment}
+                onCreateNewInvestment={handleCreateInvestment}
+              />
+            </div>
+
+            <div className="2xl:col-span-2">
+              <MonthlySummaryCard />
+            </div>
           </div>
-          <MonthlySummaryCard />
-          
-          <InvestmentsCard 
-            investments={investments}
-            onExpandInvestment={handleExpandInvestment}
-            onReinforceInvestment={handleReinforceInvestment}
-            onCreateNewInvestment={handleCreateInvestment}
-          />
         </div>
       </div>
     </div>

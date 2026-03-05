@@ -8,6 +8,11 @@ import { create } from 'zustand';
 export type ExpandedModalType = 'debts' | 'income' | 'monthlySummary' | 'investments';
 export type DrawerOrigin = 'dashboard' | 'modal';
 
+export interface DashboardFilters {
+  types: ('income' | 'expense')[];
+  period: string;
+}
+
 interface UIState {
   isRegisterModalOpen: boolean;
   isAddPlanModalOpen: boolean;
@@ -23,6 +28,7 @@ interface UIState {
   };
   sidebarCollapsed: boolean;
   expandedModal: { type: ExpandedModalType; cardId?: string } | null;
+  dashboardFilters: DashboardFilters;
   
   openRegisterModal: () => void;
   closeRegisterModal: () => void;
@@ -42,6 +48,7 @@ interface UIState {
   toggleSidebar: () => void;
   openExpandedModal: (type: ExpandedModalType, cardId?: string) => void;
   closeExpandedModal: () => void;
+  setDashboardFilters: (filters: Partial<DashboardFilters>) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -59,6 +66,10 @@ export const useUIStore = create<UIState>((set) => ({
   },
   sidebarCollapsed: true,
   expandedModal: null,
+  dashboardFilters: {
+    types: ['income', 'expense'],
+    period: 'Este Mês'
+  },
   
   openRegisterModal: () => set({ isRegisterModalOpen: true }),
   closeRegisterModal: () => set({ isRegisterModalOpen: false }),
@@ -86,4 +97,7 @@ export const useUIStore = create<UIState>((set) => ({
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   openExpandedModal: (type, cardId) => set({ expandedModal: { type, cardId } }),
   closeExpandedModal: () => set({ expandedModal: null }),
+  setDashboardFilters: (filters) => set((state) => ({ 
+    dashboardFilters: { ...state.dashboardFilters, ...filters } 
+  })),
 }));

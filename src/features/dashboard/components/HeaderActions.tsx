@@ -6,17 +6,31 @@ import {
   ChevronDown, 
   Plus 
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 export const HeaderActions = () => {
   const openRegisterModal = useUIStore(s => s.openRegisterModal);
+  const { dashboardFilters, setDashboardFilters } = useUIStore();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('Este Mês');
+
+  const filterRef = useRef<HTMLDivElement>(null);
+  const periodRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(filterRef, () => setIsFilterOpen(false));
+  useClickOutside(periodRef, () => setIsPeriodOpen(false));
 
   const periods = ['Este Mês', 'Mês Passado', 'Últimos 3 Meses'];
+
+  const toggleType = (type: 'income' | 'expense') => {
+    const newTypes = dashboardFilters.types.includes(type)
+      ? dashboardFilters.types.filter(t => t !== type)
+      : [...dashboardFilters.types, type];
+    setDashboardFilters({ types: newTypes });
+  };
 
   return (
     <header className="w-full bg-background-light shrink-0 z-10">
@@ -28,7 +42,7 @@ export const HeaderActions = () => {
         <div className="flex flex-row justify-between items-center gap-4">
           <div className="flex flex-row gap-2 sm:gap-4 relative">
             {/* Filters Button */}
-            <div className="relative">
+            <div className="relative" ref={filterRef}>
               <Button 
                 variant="outline" 
                 size="md"
@@ -49,11 +63,21 @@ export const HeaderActions = () => {
                   >
                     <div className="flex flex-col gap-3">
                       <p className="text-[10px] font-bold text-slate-400 uppercase">Tipo</p>
-                      <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" className="rounded text-primary" /> Despesa
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded text-primary" 
+                          checked={dashboardFilters.types.includes('expense')}
+                          onChange={() => toggleType('expense')}
+                        /> Despesa
                       </label>
-                      <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" className="rounded text-primary" /> Renda
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded text-primary" 
+                          checked={dashboardFilters.types.includes('income')}
+                          onChange={() => toggleType('income')}
+                        /> Renda
                       </label>
                     </div>
                   </motion.div>
@@ -62,16 +86,16 @@ export const HeaderActions = () => {
             </div>
 
             {/* Period Selector */}
-            <div className="relative">
+            <div className="relative" ref={periodRef}>
               <Button 
                 variant="outline"
                 size="md"
                 onClick={() => setIsPeriodOpen(!isPeriodOpen)}
                 className={cn("h-10 px-3 sm:px-4", isPeriodOpen ? 'bg-slate-50' : '')}
-                aria-label={selectedPeriod}
+                aria-label={dashboardFilters.period}
               >
                 <CalendarDays size={18} className="text-primary" />
-                <span className="hidden sm:inline ml-2">{selectedPeriod}</span>
+                <span className="hidden sm:inline ml-2">{dashboardFilters.period}</span>
                 <ChevronDown size={18} className="ml-1 sm:ml-2" />
               </Button>
               <AnimatePresence>
@@ -86,10 +110,13 @@ export const HeaderActions = () => {
                       <button
                         key={period}
                         onClick={() => {
-                          setSelectedPeriod(period);
+                          setDashboardFilters({ period });
                           setIsPeriodOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors"
+                        className={cn(
+                          "w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors",
+                          dashboardFilters.period === period ? "bg-slate-50 font-bold" : ""
+                        )}
                       >
                         {period}
                       </button>
