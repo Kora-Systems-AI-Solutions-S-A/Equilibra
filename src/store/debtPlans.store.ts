@@ -1,80 +1,100 @@
 import { create } from 'zustand';
-
-export type DebtPriority = 'Alta' | 'Média' | 'Baixa';
-
-export interface DebtPlan {
-  id: string;
-  name: string;
-  totalValue: number;
-  monthlyPayment: number;
-  startMonthYear: string;
-  predictedEndMonthYear: string;
-  installmentsTotal: number;
-  installmentsPaid: number;
-  remainingValue: number;
-  progressPercent: number;
-  priority: DebtPriority;
-}
+import { DebtPlan } from '../models/debtPlan.model';
+import { DebtPlansService } from '../services/debtPlans.service';
+import { CreateDebtPlanRequest } from '../mappers/debtPlans.dto';
 
 interface DebtPlansState {
-  plans: DebtPlan[];
-  addPlan: (plan: Omit<DebtPlan, 'id'>) => void;
-  updatePlan: (id: string, updates: Partial<DebtPlan>) => void;
-  registerPayment: (id: string, monthsCount?: number) => void;
+  items: DebtPlan[];
+  selected?: DebtPlan;
+  isLoading: boolean;
+  error?: string;
+
+  fetchDebtPlans: () => Promise<void>;
+  fetchDebtPlanDetails: (id: string) => Promise<void>;
+  createDebtPlan: (payload: CreateDebtPlanRequest) => Promise<void>;
+  updatePlan: (id: string, updates: Partial<DebtPlan>) => Promise<void>;
+  registerInstallmentPayment: (id: string, quantity?: number) => Promise<void>;
 }
 
-export const useDebtPlansStore = create<DebtPlansState>((set) => ({
-  plans: [
-    {
-      id: '1',
-      name: 'Financiamento Imobiliário',
-      totalValue: 450000,
-      monthlyPayment: 2500,
-      startMonthYear: '01/2023',
-      predictedEndMonthYear: '12/2037',
-      installmentsTotal: 180,
-      installmentsPaid: 14,
-      remainingValue: 415000,
-      progressPercent: 7.7,
-      priority: 'Alta',
-    },
-    {
-      id: '2',
-      name: 'Cartão de Crédito Platinum',
-      totalValue: 15000,
-      monthlyPayment: 1000,
-      startMonthYear: '10/2025',
-      predictedEndMonthYear: '12/2026',
-      installmentsTotal: 15,
-      installmentsPaid: 6,
-      remainingValue: 9000,
-      progressPercent: 40,
-      priority: 'Média',
-    },
-  ],
-  addPlan: (p) => set((state) => ({
-    plans: [
-      { ...p, id: Math.random().toString(36).substring(7) },
-      ...state.plans,
-    ],
-  })),
-  updatePlan: (id, updates) => set((state) => ({
-    plans: state.plans.map((p) => (p.id === id ? { ...p, ...updates } : p)),
-  })),
-  registerPayment: (id, monthsCount = 1) => set((state) => ({
-    plans: state.plans.map((p) => {
-      if (p.id === id) {
-        const newPaid = Math.min(p.installmentsTotal, p.installmentsPaid + monthsCount);
-        const newRemaining = Math.max(0, p.totalValue - (newPaid * p.monthlyPayment));
-        const newPercent = (newPaid / p.installmentsTotal) * 100;
-        return {
-          ...p,
-          installmentsPaid: newPaid,
-          remainingValue: newRemaining,
-          progressPercent: Number(newPercent.toFixed(1)),
-        };
-      }
-      return p;
-    }),
-  })),
+export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
+  items: [],
+  selected: undefined,
+  isLoading: false,
+  error: undefined,
+
+  fetchDebtPlans: async () => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const items = await DebtPlansService.listDebtPlans();
+      set({ items, isLoading: false });
+    } catch (error) {
+      console.error('Failed to fetch debt plans:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Erro ao carregar planos' 
+      });
+      // Fallback to empty state as requested
+      set({ items: [] });
+    }
+  },
+
+  fetchDebtPlanDetails: async (id: string) => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const selected = await DebtPlansService.getDebtPlanById(id);
+      set({ selected, isLoading: false });
+    } catch (error) {
+      console.error('Failed to fetch debt plan details:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Erro ao carregar detalhes' 
+      });
+    }
+  },
+
+  createDebtPlan: async (payload: CreateDebtPlanRequest) => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const newPlan = await DebtPlansService.createDebtPlan(payload);
+      set((state) => ({ 
+        items: [newPlan, ...state.items],
+        isLoading: false 
+      }));
+    } catch (error) {
+      console.error('Failed to create debt plan:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Erro ao criar plano' 
+      });
+      throw error;
+    }
+  },
+
+  updatePlan: async (id: string, updates: Partial<DebtPlan>) => {
+    // This is a mock for now as there's no specific update endpoint mentioned in the prompt
+    // but we need it for the UI logic (readjust plan)
+    set((state) => ({
+      items: state.items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+      selected: state.selected?.id === id ? { ...state.selected, ...updates } : state.selected,
+    }));
+  },
+
+  registerInstallmentPayment: async (id: string, quantity: number = 1) => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const updatedPlan = await DebtPlansService.registerInstallmentPayment(id, quantity);
+      set((state) => ({
+        items: state.items.map((item) => (item.id === id ? updatedPlan : item)),
+        selected: state.selected?.id === id ? updatedPlan : state.selected,
+        isLoading: false,
+      }));
+    } catch (error) {
+      console.error('Failed to register payment:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Erro ao registrar pagamento' 
+      });
+      throw error;
+    }
+  },
 }));

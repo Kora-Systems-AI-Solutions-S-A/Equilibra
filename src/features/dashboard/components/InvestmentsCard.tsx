@@ -1,9 +1,9 @@
 import React from 'react';
 import { ArrowUpRight, Globe, Landmark, Building2, Plus, LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/shared/ui/Button';
 import { formatCurrency } from '@/lib/utils';
 import { Investment } from '../types';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip } from '@/shared/ui/Tooltip';
 
 const iconMap: Record<string, LucideIcon> = {
   Globe,

@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUIStore } from '@/store/ui.store';
 import { useInvestmentsStore } from '@/store/investments.store';
-import { ModalBase } from '@/components/ui/ModalBase';
-import { Button } from '@/components/ui/Button';
-import { MoneyInput } from '@/components/ui/MoneyInput';
+import { ModalBase } from '@/shared/ui/ModalBase';
+import { Button } from '@/shared/ui/Button';
+import { MoneyInput } from '@/shared/ui/MoneyInput';
 
 const contributionSchema = z.object({
   amount: z.number().min(0.01, 'O valor deve ser maior que zero'),

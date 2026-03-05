@@ -1,5 +1,5 @@
 import { useUIStore } from '@/store/ui.store';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/shared/ui/Button';
 import { 
   SlidersHorizontal, 
   CalendarDays, 
