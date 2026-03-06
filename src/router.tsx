@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from './shared/layout/AppShell';
-import { DashboardPage } from './features/dashboard/pages/DashboardPage';
+import { DashboardPage } from './pages/DashboardPage';
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex-1 flex items-center justify-center">
