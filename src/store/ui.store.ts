@@ -7,6 +7,7 @@ import { create } from 'zustand';
 
 export type ExpandedModalType = 'debts' | 'income' | 'monthlySummary' | 'investments';
 export type DrawerOrigin = 'dashboard' | 'modal';
+export type RegisterModalContext = 'dashboard' | 'monthlySummary';
 
 export interface DashboardFilters {
   types: ('income' | 'expense')[];
@@ -29,8 +30,9 @@ interface UIState {
   sidebarCollapsed: boolean;
   expandedModal: { type: ExpandedModalType; cardId?: string } | null;
   dashboardFilters: DashboardFilters;
+  registerModalContext: RegisterModalContext;
   
-  openRegisterModal: () => void;
+  openRegisterModal: (context?: RegisterModalContext) => void;
   closeRegisterModal: () => void;
   
   openAddPlanModal: () => void;
@@ -70,8 +72,9 @@ export const useUIStore = create<UIState>((set) => ({
     types: ['income', 'expense'],
     period: 'Este Mês'
   },
+  registerModalContext: 'dashboard',
   
-  openRegisterModal: () => set({ isRegisterModalOpen: true }),
+  openRegisterModal: (context = 'dashboard') => set({ isRegisterModalOpen: true, registerModalContext: context }),
   closeRegisterModal: () => set({ isRegisterModalOpen: false }),
   
   openAddPlanModal: () => set({ isAddPlanModalOpen: true }),

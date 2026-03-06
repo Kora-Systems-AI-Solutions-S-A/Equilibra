@@ -45,7 +45,8 @@ export const AppShell = () => {
     isRegisterModalOpen, closeRegisterModal,
     isAddPlanModalOpen, closeAddPlanModal,
     planDrawer, closePlanDrawer,
-    sidebarCollapsed
+    sidebarCollapsed,
+    registerModalContext
   } = useUIStore();
 
   const [isMobile, setIsMobile] = useState(false);
@@ -68,7 +69,7 @@ export const AppShell = () => {
     createMonthlyRecord, 
     updateMonthlyRecord,
     selectedRecord,
-    setSelectedRecord
+    setSelectedRecord 
   } = useMonthlyRecordsStore();
   const { 
     createDebtPlan, 
@@ -147,6 +148,8 @@ export const AppShell = () => {
           status: data.status as MonthlyRecordStatus,
           observacoes: data.observations,
         });
+        closeRegisterModal();
+        setSelectedRecord(undefined);
       } else {
         await createMonthlyRecord({
           tipo: data.type as MonthlyRecordType,
@@ -159,10 +162,22 @@ export const AppShell = () => {
           mesReferencia: selectedMonth,
           observacoes: data.observations,
         });
+        
+        // If coming from monthlySummary context, don't close, just reset
+        if (registerModalContext === 'monthlySummary') {
+          transactionForm.reset({
+            type: data.type as MonthlyRecordType, // Keep the same type for convenience
+            status: data.type === 'Receita' ? 'Recebido' : 'Pendente',
+            category: data.type === 'Despesa' ? 'Habitação' : undefined,
+            description: '',
+            value: 0,
+            origin: '',
+            observations: ''
+          });
+        } else {
+          closeRegisterModal();
+        }
       }
-      closeRegisterModal();
-      setSelectedRecord(undefined);
-      transactionForm.reset();
     } catch (error) {
       console.error('Failed to save record:', error);
     }

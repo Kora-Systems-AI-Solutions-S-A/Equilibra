@@ -18,8 +18,9 @@ import {
 } from '@/helpers/monthlyRecords.calculations';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Button } from '@/shared/ui/Button';
-import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, CheckCircle2, XCircle, Edit2 } from 'lucide-react';
+import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, CheckCircle2, XCircle, Edit2, Plus } from 'lucide-react';
 import { RowActionsMenu, ActionItem } from '@/shared/ui/RowActionsMenu';
+import { Tooltip } from '@/shared/ui/Tooltip';
 
 import { useInvestmentsStore } from '@/store/investments.store';
 
@@ -363,7 +364,7 @@ export const ModalExpandedCard = () => {
     };
 
     return (
-      <div className="flex flex-col gap-8 h-full max-h-[80vh]">
+      <div className="flex flex-col gap-8 h-full max-h-[80vh] relative">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
           {/* Rendimentos vs Despesas */}
           <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center gap-4 border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
@@ -538,6 +539,20 @@ export const ModalExpandedCard = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        {/* Floating Action Button for new record */}
+        <div className="sticky bottom-0 right-0 flex justify-end pb-2 pr-2 pointer-events-none">
+          <div className="pointer-events-auto">
+            <Tooltip content="Registrar movimentação">
+              <button 
+                onClick={() => openRegisterModal('monthlySummary')}
+                className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              >
+                <Plus size={24} />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
