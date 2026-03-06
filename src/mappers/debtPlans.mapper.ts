@@ -1,4 +1,4 @@
-import { DebtPlan } from '../models/debtPlan.model';
+import { DebtPlan } from '@/models/debtPlan.model';
 import { DebtPlanDto, CreateDebtPlanRequest } from './debtPlans.dto';
 
 export const debtPlanMapper = {

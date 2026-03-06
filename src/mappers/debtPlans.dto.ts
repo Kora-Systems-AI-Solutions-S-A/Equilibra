@@ -1,4 +1,4 @@
-import { DebtPriority } from '../models/debtPlan.model';
+import { DebtPriority } from '@/models/debtPlan.model';
 
 export interface DebtPlanDto {
   id: string;

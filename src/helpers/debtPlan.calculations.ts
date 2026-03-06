@@ -1,4 +1,4 @@
-import { DebtPlan } from '../models/debtPlan.model';
+import { DebtPlan } from '@/models/debtPlan.model';
 
 export const calculateValorRestante = (plan: DebtPlan): number => {
   return Math.max(0, plan.valorTotal - plan.parcelasPagas * plan.valorMensal);

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { DebtPlan } from '../models/debtPlan.model';
-import { DebtPlansService } from '../services/debtPlans.service';
-import { CreateDebtPlanRequest } from '../mappers/debtPlans.dto';
+import { DebtPlan } from '@/models/debtPlan.model';
+import { DebtPlansService } from '@/services/debtPlans.service';
+import { CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
 
 interface DebtPlansState {
   items: DebtPlan[];
