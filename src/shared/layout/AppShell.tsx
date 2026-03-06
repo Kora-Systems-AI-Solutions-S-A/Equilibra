@@ -8,10 +8,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/shared/ui/Button';
-import { useTransactionsStore } from '@/store/transactions.store';
+import { useMonthlyRecordsStore } from '@/store/monthlyRecords.store';
 import { useDebtPlansStore } from '@/store/debtPlans.store';
 import { calculateProgressPercent, calculateValorRestante } from '@/helpers/debtPlan.calculations';
 import { DebtPriority } from '@/models/debtPlan.model';
+import { MonthlyRecordType, MonthlyRecordStatus } from '@/models/monthlyRecord.model';
 import { motion } from 'motion/react';
 import { ModalExpandedCard } from '@/features/dashboard/components/ModalExpandedCard';
 import { InvestmentContributionModal } from '@/features/dashboard/components/InvestmentContributionModal';
@@ -25,9 +26,11 @@ import { getCurrentMonthYear, addMonthsToMonthYear, getMonthsDifference, getMont
 const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   value: z.number().min(0.01, 'Valor deve ser maior que zero'),
-  category: z.string().min(1, 'Categoria é obrigatória'),
-  type: z.enum(['income', 'expense']),
-  status: z.enum(['Pago', 'Pendente', 'Recebido']),
+  category: z.string().optional(),
+  origin: z.string().optional(),
+  type: z.enum(['Receita', 'Despesa']),
+  status: z.enum(['Pago', 'Pendente', 'Recebido', 'Cancelado']),
+  observations: z.string().optional(),
 });
 
 const planSchema = z.object({
@@ -59,7 +62,14 @@ export const AppShell = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const addTransaction = useTransactionsStore(s => s.addTransaction);
+  const { 
+    items: records, 
+    selectedMonth, 
+    createMonthlyRecord, 
+    updateMonthlyRecord,
+    selectedRecord,
+    setSelectedRecord
+  } = useMonthlyRecordsStore();
   const { 
     createDebtPlan, 
     updatePlan, 
@@ -71,23 +81,52 @@ export const AppShell = () => {
   const transactionForm = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: { 
-      type: 'expense',
+      type: 'Despesa',
       status: 'Pendente',
       category: 'Habitação'
     }
   });
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (isRegisterModalOpen && selectedRecord) {
+      transactionForm.reset({
+        description: selectedRecord.descricao,
+        value: selectedRecord.valor,
+        category: selectedRecord.categoria,
+        origin: selectedRecord.origem,
+        type: selectedRecord.tipo,
+        status: selectedRecord.status,
+        observations: selectedRecord.observacoes,
+      });
+    } else if (isRegisterModalOpen && !selectedRecord) {
+      transactionForm.reset({
+        type: 'Despesa',
+        status: 'Pendente',
+        category: 'Habitação',
+        description: '',
+        value: 0,
+        origin: '',
+        observations: ''
+      });
+    }
+  }, [isRegisterModalOpen, selectedRecord, transactionForm]);
+
   const watchType = transactionForm.watch('type');
 
   useEffect(() => {
-    if (watchType === 'income') {
-      transactionForm.setValue('status', 'Recebido');
-      transactionForm.setValue('category', 'Renda');
-    } else {
-      transactionForm.setValue('status', 'Pendente');
-      transactionForm.setValue('category', 'Habitação');
+    // Only auto-set status/category if NOT editing or if type changed manually
+    if (!selectedRecord) {
+      if (watchType === 'Receita') {
+        transactionForm.setValue('status', 'Recebido');
+        transactionForm.setValue('category', undefined);
+      } else {
+        transactionForm.setValue('status', 'Pendente');
+        transactionForm.setValue('category', 'Habitação');
+        transactionForm.setValue('origin', undefined);
+      }
     }
-  }, [watchType, transactionForm]);
+  }, [watchType, transactionForm, selectedRecord]);
 
   const planForm = useForm<z.infer<typeof planSchema>>({
     resolver: zodResolver(planSchema),
@@ -96,13 +135,37 @@ export const AppShell = () => {
     }
   });
 
-  const onTransactionSubmit = (data: z.infer<typeof transactionSchema>) => {
-    addTransaction({
-      ...data,
-      date: new Date().toISOString().split('T')[0],
-    });
-    closeRegisterModal();
-    transactionForm.reset();
+  const onTransactionSubmit = async (data: z.infer<typeof transactionSchema>) => {
+    try {
+      if (selectedRecord) {
+        await updateMonthlyRecord(selectedRecord.id, {
+          tipo: data.type as MonthlyRecordType,
+          descricao: data.description,
+          origem: data.origin,
+          categoria: data.category,
+          valor: data.value,
+          status: data.status as MonthlyRecordStatus,
+          observacoes: data.observations,
+        });
+      } else {
+        await createMonthlyRecord({
+          tipo: data.type as MonthlyRecordType,
+          descricao: data.description,
+          origem: data.origin,
+          categoria: data.category,
+          valor: data.value,
+          status: data.status as MonthlyRecordStatus,
+          data: new Date().toISOString(),
+          mesReferencia: selectedMonth,
+          observacoes: data.observations,
+        });
+      }
+      closeRegisterModal();
+      setSelectedRecord(undefined);
+      transactionForm.reset();
+    } catch (error) {
+      console.error('Failed to save record:', error);
+    }
   };
 
   const handleSimulate = () => {
@@ -198,7 +261,7 @@ export const AppShell = () => {
 
       <ModalExpandedCard />
 
-      <ModalBase isOpen={isRegisterModalOpen} onClose={closeRegisterModal} title="Registrar Movimentação">
+      <ModalBase isOpen={isRegisterModalOpen} onClose={() => { closeRegisterModal(); setSelectedRecord(undefined); }} title={selectedRecord ? "Editar Movimentação" : "Registrar Movimentação"}>
         <form onSubmit={transactionForm.handleSubmit(onTransactionSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Tipo</label>
@@ -207,15 +270,24 @@ export const AppShell = () => {
               className="rounded-lg p-2 outline-none transition-all"
               style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
             >
-              <option value="expense">Despesa</option>
-              <option value="income">Receita</option>
+              <option value="Despesa">Despesa</option>
+              <option value="Receita">Receita</option>
             </select>
           </div>
 
-          {watchType === 'income' ? (
+          {watchType === 'Receita' ? (
             <>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Origem</label>
+                <input 
+                  {...transactionForm.register('origin')} 
+                  placeholder="Ex: Salário, Freelance..."
+                  className="rounded-lg p-2 outline-none transition-all" 
+                  style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Descrição</label>
                 <input 
                   {...transactionForm.register('description')} 
                   className="rounded-lg p-2 outline-none transition-all" 

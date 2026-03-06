@@ -2,13 +2,24 @@ import React, { useState } from 'react';
 import { useUIStore } from '@/store/ui.store';
 import { ModalBase } from '@/shared/ui/ModalBase';
 import { useDebtPlansStore } from '@/store/debtPlans.store';
+import { useMonthlyRecordsStore } from '@/store/monthlyRecords.store';
 import { DebtPlan } from '@/models/debtPlan.model';
 import { calculateProgressPercent } from '@/helpers/debtPlan.calculations';
-import { useTransactionsStore } from '@/store/transactions.store';
+import { 
+  getIncomeRecords, 
+  getTotalReceivedInMonth, 
+  getIncomeMonthComparison, 
+  getProjectedNextMonthIncome,
+  getTotalIncomeInMonth,
+  getTotalActiveExpensesInMonth,
+  getExpenseCategoryChartData,
+  getIncomeExpenseTrendChartData,
+  getCashFlowChartData
+} from '@/helpers/monthlyRecords.calculations';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
-import { formatEuro } from '@/lib/formatters/money';
 import { Button } from '@/shared/ui/Button';
-import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, MoreHorizontal, CheckCircle2, Filter } from 'lucide-react';
+import { Globe, Landmark, Building2, TrendingUp, LayoutGrid, CheckCircle2, XCircle, Edit2 } from 'lucide-react';
+import { RowActionsMenu, ActionItem } from '@/shared/ui/RowActionsMenu';
 
 import { useInvestmentsStore } from '@/store/investments.store';
 
@@ -34,9 +45,23 @@ const sortPlansForDashboard = (plans: DebtPlan[]) => {
 };
 
 export const ModalExpandedCard = () => {
-  const { expandedModal, closeExpandedModal, openPlanDrawer, openInvestmentContributionModal } = useUIStore();
+  const { 
+    expandedModal, 
+    closeExpandedModal, 
+    openPlanDrawer, 
+    openInvestmentContributionModal,
+    openRegisterModal
+  } = useUIStore();
   const { items: plans } = useDebtPlansStore();
-  const { transactions, updateTransactionStatus } = useTransactionsStore();
+  const { 
+    items: records, 
+    allRecords,
+    selectedMonth, 
+    markAsReceived, 
+    markAsPaid, 
+    cancelRecord,
+    setSelectedRecord
+  } = useMonthlyRecordsStore();
   const { investments } = useInvestmentsStore();
 
   const [summaryFilter, setSummaryFilter] = useState<'Todos' | 'Pago' | 'Pendente'>('Todos');
@@ -49,6 +74,46 @@ export const ModalExpandedCard = () => {
     Globe,
     Landmark,
     Building2,
+  };
+
+  const getRecordActions = (record: any): ActionItem[] => {
+    const actions: ActionItem[] = [
+      { 
+        label: 'Editar', 
+        onClick: () => {
+          setSelectedRecord(record);
+          openRegisterModal();
+        }, 
+        icon: <Edit2 size={14} /> 
+      }
+    ];
+
+    if (record.status === 'Pendente') {
+      if (record.tipo === 'Receita') {
+        actions.push({ 
+          label: 'Marcar como Recebido', 
+          onClick: () => markAsReceived(record.id), 
+          icon: <CheckCircle2 size={14} className="text-green-500" /> 
+        });
+      } else {
+        actions.push({ 
+          label: 'Marcar como Pago', 
+          onClick: () => markAsPaid(record.id), 
+          icon: <CheckCircle2 size={14} className="text-green-500" /> 
+        });
+      }
+    }
+
+    if (record.status !== 'Cancelado') {
+      actions.push({ 
+        label: 'Cancelar', 
+        onClick: () => cancelRecord(record.id), 
+        icon: <XCircle size={14} className="text-red-500" />,
+        variant: 'danger'
+      });
+    }
+
+    return actions;
   };
 
   const renderInvestmentsContent = () => {
@@ -166,20 +231,22 @@ export const ModalExpandedCard = () => {
   };
 
   const renderIncomeContent = () => {
-    const incomeTransactions = transactions.filter(t => t.type === 'income');
-    const totalIncome = incomeTransactions.reduce((acc, t) => t.status === 'Recebido' ? acc + t.value : acc, 0);
+    const incomeRecords = getIncomeRecords(records);
+    const totalReceived = getTotalReceivedInMonth(records);
+    const comparison = getIncomeMonthComparison(totalReceived, 4620);
+    const projection = getProjectedNextMonthIncome(records);
 
     return (
       <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between p-8 rounded-2xl text-white" style={{ backgroundColor: 'var(--modal-accent)', color: '#000' }}>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ opacity: 0.7 }}>Total Recebido (Outubro)</p>
-            <p className="text-5xl font-black">{formatEuro(totalIncome)}</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ opacity: 0.7 }}>Total Recebido ({selectedMonth})</p>
+            <p className="text-5xl font-black">{formatCurrency(totalReceived)}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
               <TrendingUp size={16} />
-              <span className="text-xs font-bold">+12.5%</span>
+              <span className="text-xs font-bold">{comparison >= 0 ? '+' : ''}{comparison.toFixed(1)}%</span>
             </div>
             <p className="text-[10px] uppercase font-bold" style={{ opacity: 0.6 }}>vs mês anterior</p>
           </div>
@@ -189,33 +256,27 @@ export const ModalExpandedCard = () => {
           <div className="flex flex-col gap-4">
             <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Histórico de Entradas</h4>
             <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-              {incomeTransactions.map((income) => (
+              {incomeRecords.map((income) => (
                 <div key={income.id} className="flex justify-between items-center p-4 rounded-xl border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
                   <div className="flex flex-col gap-1">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{income.description}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--modal-muted)' }}>{formatDate(income.date)}</p>
-                    {income.status === 'Pendente' && (
-                      <button 
-                        onClick={() => updateTransactionStatus(income.id, 'Recebido')}
-                        className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 mt-1"
-                      >
-                        <CheckCircle2 size={12} />
-                        Marcar como Recebido
-                      </button>
-                    )}
+                    <p className="text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{income.descricao}</p>
+                    <p className="text-[10px]" style={{ color: 'var(--modal-muted)' }}>{formatDate(income.data)}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold" style={{ color: 'var(--modal-accent)' }}>{formatEuro(income.value)}</p>
-                    <p className={cn(
-                      "text-[9px] font-bold uppercase",
-                      income.status === 'Recebido' ? 'text-green-400' : 'text-orange-400'
-                    )}>
-                      {income.status}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm font-bold" style={{ color: 'var(--modal-accent)' }}>{formatCurrency(income.valor)}</p>
+                      <p className={cn(
+                        "text-[9px] font-bold uppercase",
+                        income.status === 'Recebido' ? 'text-green-400' : 'text-orange-400'
+                      )}>
+                        {income.status}
+                      </p>
+                    </div>
+                    <RowActionsMenu actions={getRecordActions(income)} />
                   </div>
                 </div>
               ))}
-              {incomeTransactions.length === 0 && (
+              {incomeRecords.length === 0 && (
                 <p className="text-center py-8 text-sm text-slate-500">Nenhuma entrada registrada.</p>
               )}
             </div>
@@ -225,21 +286,15 @@ export const ModalExpandedCard = () => {
             <div className="p-6 rounded-2xl flex flex-col gap-6" style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)' }}>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--modal-muted)' }}>Estimativa de Recebimento</p>
-                <p className="text-3xl font-black">€ 6.450,00</p>
+                <p className="text-3xl font-black">{formatCurrency(projection)}</p>
               </div>
               <div className="flex flex-col gap-3">
-                <div className="flex justify-between text-xs">
-                  <span style={{ color: 'var(--modal-muted)' }}>Salário Fixo</span>
-                  <span className="font-bold">€ 4.000,00</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span style={{ color: 'var(--modal-muted)' }}>Projetos Freelance</span>
-                  <span className="font-bold">€ 2.000,00</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span style={{ color: 'var(--modal-muted)' }}>Rendimentos</span>
-                  <span className="font-bold">€ 450,00</span>
-                </div>
+                {incomeRecords.slice(0, 3).map(rec => (
+                  <div key={rec.id} className="flex justify-between text-xs">
+                    <span style={{ color: 'var(--modal-muted)' }}>{rec.descricao}</span>
+                    <span className="font-bold">{formatCurrency(rec.valor)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -249,19 +304,45 @@ export const ModalExpandedCard = () => {
   };
 
   const renderMonthlySummaryContent = () => {
-    const filteredTransactions = transactions.filter(t => {
-      if (summaryFilter === 'Todos') return true;
+    const filteredRecords = records.filter(t => {
+      if (summaryFilter === 'Todos') return t.status !== 'Cancelado';
       return t.status === summaryFilter;
     });
 
+    const {
+      totalIncome,
+      totalExpense,
+      incomePercent,
+      expensePercent,
+      saldo
+    } = getCashFlowChartData(records);
+
+    const categoryData = getExpenseCategoryChartData(records);
+    const trendData = getIncomeExpenseTrendChartData(allRecords, selectedMonth);
+
+    const generatePath = (data: any[], key: string, height: number, width: number) => {
+      if (data.length === 0) return "";
+      const allValues = data.flatMap(d => [d.income, d.expense]);
+      const maxVal = Math.max(...allValues, 1);
+      const points = data.map((d, i) => {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - (d[key] / maxVal) * (height - 20) - 10;
+        return `${x},${y}`;
+      });
+      return `M${points.join(" L")}`;
+    };
+
+    const incomePath = generatePath(trendData, 'income', 120, 400);
+    const expensePath = generatePath(trendData, 'expense', 120, 400);
+
     const exportToCSV = () => {
       const headers = ['Tipo', 'Data', 'Descrição/Origem', 'Categoria', 'Valor', 'Situação'];
-      const rows = transactions.map(t => [
-        t.type === 'income' ? 'Renda' : 'Despesa',
-        formatDate(t.date),
-        t.description,
-        t.category,
-        formatEuro(t.value).replace('€', '').trim(),
+      const rows = records.map(t => [
+        t.tipo,
+        formatDate(t.data),
+        t.descricao,
+        t.tipo === 'Receita' ? 'Receita' : (t.categoria || t.origem || '-'),
+        formatCurrency(t.valor).replace('€', '').trim(),
         t.status
       ]);
 
@@ -274,7 +355,7 @@ export const ModalExpandedCard = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `resumo_mensal_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `resumo_mensal_${selectedMonth.replace('/', '_')}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -290,12 +371,12 @@ export const ModalExpandedCard = () => {
             <div className="relative w-[160px] h-[160px] flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" fill="transparent" r="16" stroke="rgba(255,255,255,0.05)" strokeWidth="4"></circle>
-                <circle cx="18" cy="18" fill="transparent" r="16" stroke="var(--modal-accent)" strokeDasharray="70, 100" strokeLinecap="round" strokeWidth="4"></circle>
-                <circle cx="18" cy="18" fill="transparent" r="16" stroke="var(--modal-danger)" strokeDasharray="30, 100" strokeDashoffset="-70" strokeLinecap="round" strokeWidth="4"></circle>
+                <circle cx="18" cy="18" fill="transparent" r="16" stroke="var(--modal-accent)" strokeDasharray={`${incomePercent}, 100`} strokeLinecap="round" strokeWidth="4"></circle>
+                <circle cx="18" cy="18" fill="transparent" r="16" stroke="var(--modal-danger)" strokeDasharray={`${expensePercent}, 100`} strokeDashoffset={`-${incomePercent}`} strokeLinecap="round" strokeWidth="4"></circle>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Saldo</span>
-                <span className="text-xl font-black" style={{ color: 'var(--modal-text)' }}>€ 3.640</span>
+                <span className="text-xl font-black" style={{ color: 'var(--modal-text)' }}>{formatCurrency(saldo)}</span>
               </div>
             </div>
             <div className="flex gap-4 w-full justify-center">
@@ -316,47 +397,67 @@ export const ModalExpandedCard = () => {
             <div className="relative w-[160px] h-[160px] flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" fill="transparent" r="16" stroke="rgba(255,255,255,0.05)" strokeWidth="4"></circle>
-                <circle cx="18" cy="18" fill="transparent" r="16" stroke="#3b82f6" strokeDasharray="40, 100" strokeLinecap="round" strokeWidth="4"></circle>
-                <circle cx="18" cy="18" fill="transparent" r="16" stroke="#f59e0b" strokeDasharray="25, 100" strokeDashoffset="-40" strokeLinecap="round" strokeWidth="4"></circle>
-                <circle cx="18" cy="18" fill="transparent" r="16" stroke="#8b5cf6" strokeDasharray="35, 100" strokeDashoffset="-65" strokeLinecap="round" strokeWidth="4"></circle>
+                {categoryData.slice(0, 3).map((cat, i, arr) => {
+                  const totalVal = categoryData.reduce((acc, c) => acc + c.value, 0);
+                  const percent = (cat.value / totalVal) * 100;
+                  const offset = arr.slice(0, i).reduce((acc, c) => acc + (c.value / totalVal) * 100, 0);
+                  const colors = ['#3b82f6', '#f59e0b', '#8b5cf6'];
+                  return (
+                    <circle 
+                      key={cat.name}
+                      cx="18" cy="18" fill="transparent" r="16" 
+                      stroke={colors[i % colors.length]} 
+                      strokeDasharray={`${percent}, 100`} 
+                      strokeDashoffset={`-${offset}`}
+                      strokeLinecap="round" strokeWidth="4"
+                    ></circle>
+                  );
+                })}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <LayoutGrid size={24} style={{ color: 'var(--modal-muted)' }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#3b82f6]"></div>
-                <span className="text-[10px] font-bold" style={{ color: 'var(--modal-muted)' }}>Habitação</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
-                <span className="text-[10px] font-bold" style={{ color: 'var(--modal-muted)' }}>Comida</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#8b5cf6]"></div>
-                <span className="text-[10px] font-bold" style={{ color: 'var(--modal-muted)' }}>Lazer</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-slate-700"></div>
-                <span className="text-[10px] font-bold" style={{ color: 'var(--modal-muted)' }}>Outros</span>
-              </div>
+              {categoryData.slice(0, 4).map((cat, i) => {
+                const colors = ['bg-[#3b82f6]', 'bg-[#f59e0b]', 'bg-[#8b5cf6]', 'bg-slate-700'];
+                return (
+                  <div key={cat.name} className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${colors[i % colors.length]}`}></div>
+                    <span className="text-[10px] font-bold" style={{ color: 'var(--modal-muted)' }}>{cat.name}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Tendência */}
           <div className="p-6 rounded-2xl shadow-sm flex flex-col gap-6 border" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
             <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--modal-muted)' }}>Tendência (6 Meses)</h4>
-            <div className="flex-1 flex items-end gap-2 h-[120px]">
-              {[40, 65, 45, 80, 55, 90].map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <div 
-                    className="w-full rounded-t-lg transition-all duration-500"
-                    style={{ height: `${h}%`, backgroundColor: i === 5 ? 'var(--modal-accent)' : 'rgba(255,255,255,0.05)' }}
-                  ></div>
-                  <span className="text-[8px] font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>{['M', 'J', 'J', 'A', 'S', 'O'][i]}</span>
-                </div>
-              ))}
+            <div className="flex-1 flex flex-col gap-2 h-[120px]">
+              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 120">
+                <path d={incomePath} fill="none" stroke="var(--modal-accent)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
+                <path d={expensePath} fill="none" stroke="var(--modal-danger)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
+                
+                {trendData.map((d, i) => {
+                  const x = (i / (trendData.length - 1)) * 400;
+                  const allValues = trendData.flatMap(v => [v.income, v.expense]);
+                  const maxVal = Math.max(...allValues, 1);
+                  const yIncome = 120 - (d.income / maxVal) * 100 - 10;
+                  const yExpense = 120 - (d.expense / maxVal) * 100 - 10;
+                  return (
+                    <g key={i}>
+                      <circle cx={x} cy={yIncome} fill="white" r="3" stroke="var(--modal-accent)" strokeWidth="2"></circle>
+                      <circle cx={x} cy={yExpense} fill="white" r="3" stroke="var(--modal-danger)" strokeWidth="2"></circle>
+                    </g>
+                  );
+                })}
+              </svg>
+              <div className="flex justify-between w-full px-1">
+                {trendData.map((d, i) => (
+                  <span key={i} className="text-[8px] font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>{d.month}</span>
+                ))}
+              </div>
             </div>
             <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
               <p className="text-[10px] leading-tight" style={{ color: 'var(--modal-muted)' }}>
@@ -403,45 +504,34 @@ export const ModalExpandedCard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: 'var(--modal-border)' }}>
-                  {filteredTransactions.map((t) => (
+                  {filteredRecords.map((t) => (
                     <tr key={t.id} className="transition-colors" style={{ backgroundColor: 'transparent' }}>
-                      <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--modal-text)' }}>{formatDate(t.date)}</td>
-                      <td className="px-6 py-4 text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{t.description}</td>
+                      <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--modal-text)' }}>{formatDate(t.data)}</td>
+                      <td className="px-6 py-4 text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{t.descricao}</td>
                       <td className="px-6 py-4">
                         <span className="px-3 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--modal-text)' }}>
-                          {t.category}
+                          {t.tipo === 'Receita' ? 'Receita' : (t.categoria || t.origem || 'Geral')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{formatEuro(t.value)}</td>
+                      <td className="px-6 py-4 text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{formatCurrency(t.valor)}</td>
                       <td className="px-6 py-4">
                         <span className={cn(
                           "text-[10px] font-bold uppercase",
-                          t.status === 'Pago' || t.status === 'Recebido' ? 'text-green-400' : 'text-orange-400'
+                          t.status === 'Pago' || t.status === 'Recebido' ? 'text-green-400' : 
+                          t.status === 'Cancelado' ? 'text-slate-500' : 'text-orange-400'
                         )}>
                           {t.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end items-center gap-2">
-                          {t.status === 'Pendente' && (
-                            <button 
-                              onClick={() => updateTransactionStatus(t.id, t.type === 'income' ? 'Recebido' : 'Pago')}
-                              className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              Marcar como {t.type === 'income' ? 'Recebido' : 'Pago'}
-                            </button>
-                          )}
-                          <button style={{ color: 'var(--modal-muted)' }} className="hover:opacity-80">
-                            <MoreHorizontal size={20} />
-                          </button>
-                        </div>
+                        <RowActionsMenu actions={getRecordActions(t)} />
                       </td>
                     </tr>
                   ))}
-                  {filteredTransactions.length === 0 && (
+                  {filteredRecords.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-500">
-                        Nenhuma transação encontrada para este filtro.
+                        Nenhum registro encontrado para este filtro.
                       </td>
                     </tr>
                   )}

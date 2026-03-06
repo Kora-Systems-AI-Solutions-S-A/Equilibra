@@ -5,17 +5,21 @@ import { MonthlySummaryCard } from '@/features/dashboard/components/MonthlySumma
 import { InvestmentsCard } from '@/features/dashboard/components/InvestmentsCard';
 import { useInvestmentsStore } from '@/store/investments.store';
 import { useDebtPlansStore } from '@/store/debtPlans.store';
+import { useMonthlyRecordsStore } from '@/store/monthlyRecords.store';
 import { useUIStore } from '@/store/ui.store';
 import { useEffect } from 'react';
 
 export const DashboardPage = () => {
   const { investments } = useInvestmentsStore();
   const { fetchDebtPlans } = useDebtPlansStore();
+  const { fetchMonthlyRecords, fetchAllRecords } = useMonthlyRecordsStore();
   const { openExpandedModal, openInvestmentContributionModal, openCreateInvestmentModal } = useUIStore();
 
   useEffect(() => {
     fetchDebtPlans();
-  }, [fetchDebtPlans]);
+    fetchMonthlyRecords();
+    fetchAllRecords();
+  }, [fetchDebtPlans, fetchMonthlyRecords, fetchAllRecords]);
 
   const handleExpandInvestment = () => openExpandedModal('investments');
   const handleReinforceInvestment = (id: string) => openInvestmentContributionModal(id);

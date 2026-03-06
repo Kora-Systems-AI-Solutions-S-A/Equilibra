@@ -1,0 +1,131 @@
+import { create } from 'zustand';
+import { MonthlyRecord, MonthlyRecordStatus } from '@/models/monthlyRecord.model';
+import { MonthlyRecordsService } from '@/services/monthlyRecords.service';
+import { CreateMonthlyRecordRequest, UpdateMonthlyRecordRequest } from '@/mappers/monthlyRecords.dto';
+import { getCurrentMonthYear } from '@/lib/date';
+
+interface MonthlyRecordsState {
+  items: MonthlyRecord[];
+  allRecords: MonthlyRecord[]; // For trend charts
+  isLoading: boolean;
+  error?: string;
+  selectedMonth: string;
+  selectedRecord?: MonthlyRecord;
+
+  fetchMonthlyRecords: (monthRef?: string) => Promise<void>;
+  fetchAllRecords: () => Promise<void>;
+  createMonthlyRecord: (payload: CreateMonthlyRecordRequest) => Promise<void>;
+  updateMonthlyRecord: (id: string, payload: UpdateMonthlyRecordRequest) => Promise<void>;
+  markAsPaid: (id: string) => Promise<void>;
+  markAsReceived: (id: string) => Promise<void>;
+  cancelRecord: (id: string) => Promise<void>;
+  setSelectedMonth: (month: string) => void;
+  setSelectedRecord: (record?: MonthlyRecord) => void;
+}
+
+export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => ({
+  items: [],
+  allRecords: [],
+  isLoading: false,
+  error: undefined,
+  selectedMonth: getCurrentMonthYear(),
+  selectedRecord: undefined,
+
+  fetchMonthlyRecords: async (monthRef) => {
+    const ref = monthRef || get().selectedMonth;
+    set({ isLoading: true, error: undefined });
+    try {
+      const items = await MonthlyRecordsService.listMonthlyRecords(ref);
+      set({ items, isLoading: false });
+    } catch (error) {
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Erro ao carregar registros' 
+      });
+    }
+  },
+
+  fetchAllRecords: async () => {
+    try {
+      const allRecords = await MonthlyRecordsService.listMonthlyRecords();
+      set({ allRecords });
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  createMonthlyRecord: async (payload) => {
+    set({ isLoading: true });
+    try {
+      const newItem = await MonthlyRecordsService.createMonthlyRecord(payload);
+      // Update allRecords
+      set((state) => ({ allRecords: [newItem, ...state.allRecords] }));
+      // Only add to list if it matches selected month
+      if (newItem.mesReferencia === get().selectedMonth) {
+        set((state) => ({ items: [newItem, ...state.items] }));
+      }
+      set({ isLoading: false });
+    } catch (error) {
+      set({ isLoading: false, error: 'Erro ao criar registro' });
+      throw error;
+    }
+  },
+
+  updateMonthlyRecord: async (id, payload) => {
+    set({ isLoading: true });
+    try {
+      const updated = await MonthlyRecordsService.updateMonthlyRecord(id, payload);
+      set((state) => ({
+        items: state.items.map(item => item.id === id ? updated : item),
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item),
+        isLoading: false
+      }));
+    } catch (error) {
+      set({ isLoading: false, error: 'Erro ao atualizar registro' });
+      throw error;
+    }
+  },
+
+  markAsPaid: async (id) => {
+    try {
+      const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(id, 'Pago');
+      set((state) => ({
+        items: state.items.map(item => item.id === id ? updated : item),
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item)
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  markAsReceived: async (id) => {
+    try {
+      const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(id, 'Recebido');
+      set((state) => ({
+        items: state.items.map(item => item.id === id ? updated : item),
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item)
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  cancelRecord: async (id) => {
+    try {
+      const updated = await MonthlyRecordsService.cancelMonthlyRecord(id);
+      set((state) => ({
+        items: state.items.map(item => item.id === id ? updated : item),
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item)
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  setSelectedMonth: (month) => {
+    set({ selectedMonth: month });
+    get().fetchMonthlyRecords(month);
+  },
+
+  setSelectedRecord: (record) => set({ selectedRecord: record }),
+}));
