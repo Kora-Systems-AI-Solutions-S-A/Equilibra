@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowUpRight, Globe, Landmark, Building2, Plus, LucideIcon } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
 import { formatCurrency } from '@/lib/utils';
-import { Investment } from '../types';
+import { InvestmentPlan } from '@/models/investmentPlan.model';
 import { Tooltip } from '@/shared/ui/Tooltip';
 
 const iconMap: Record<string, LucideIcon> = {
@@ -12,7 +12,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 interface InvestmentsCardProps {
-  investments: Investment[];
+  investments: InvestmentPlan[];
   onExpandInvestment: () => void;
   onReinforceInvestment: (id: string) => void;
   onCreateNewInvestment: () => void;
@@ -40,16 +40,16 @@ export const InvestmentsCard: React.FC<InvestmentsCardProps> = ({
       </div>
       <div className="px-6 md:px-8 flex flex-col gap-4 flex-1">
         {investments.map((item) => {
-          const Icon = iconMap[item.icon] || Globe;
+          const Icon = iconMap[item.icone] || Globe;
           return (
             <div key={item.id} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 gap-4">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center`}>
+                <div className={`w-12 h-12 ${item.cor} rounded-xl flex items-center justify-center`}>
                   <Icon size={24} />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-slate-800">{item.name}</h4>
-                  <p className="text-xs text-slate-500 font-medium uppercase tracking-tight">{formatCurrency(item.totalValue)}</p>
+                  <h4 className="font-semibold text-slate-800">{item.nome}</h4>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-tight">{formatCurrency(item.valorAtual)}</p>
                 </div>
               </div>
               <Button 

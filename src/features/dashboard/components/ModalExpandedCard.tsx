@@ -122,16 +122,16 @@ export const ModalExpandedCard = () => {
       <div className="flex flex-col gap-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {investments.map((inv) => {
-            const Icon = iconMap[inv.icon as keyof typeof iconMap];
+            const Icon = iconMap[inv.icone as keyof typeof iconMap] || Globe;
             return (
               <div key={inv.id} className="p-6 rounded-2xl shadow-sm flex flex-col gap-4" style={{ backgroundColor: 'var(--modal-surface)', border: '1px solid var(--modal-border)' }}>
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 ${inv.color} rounded-xl flex items-center justify-center`}>
+                  <div className={`w-12 h-12 ${inv.cor} rounded-xl flex items-center justify-center`}>
                     <Icon size={24} />
                   </div>
                   <div>
-                    <h4 className="font-semibold" style={{ color: 'var(--modal-text)' }}>{inv.name}</h4>
-                    <p className="text-sm font-black" style={{ color: 'var(--modal-text)' }}>{formatCurrency(inv.totalValue)}</p>
+                    <h4 className="font-semibold" style={{ color: 'var(--modal-text)' }}>{inv.nome}</h4>
+                    <p className="text-sm font-black" style={{ color: 'var(--modal-text)' }}>{formatCurrency(inv.valorAtual)}</p>
                   </div>
                 </div>
                 <Button 
@@ -151,7 +151,7 @@ export const ModalExpandedCard = () => {
           <div className="flex flex-col gap-1">
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--modal-muted)' }}>Patrimônio Total em Investimentos</p>
             <p className="text-4xl font-black">
-              {formatCurrency(investments.reduce((acc, inv) => acc + inv.totalValue, 0))}
+              {formatCurrency(investments.reduce((acc, inv) => acc + inv.valorAtual, 0))}
             </p>
           </div>
           <div className="flex gap-4">

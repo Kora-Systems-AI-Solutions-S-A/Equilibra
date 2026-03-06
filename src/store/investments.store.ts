@@ -1,53 +1,69 @@
 import { create } from 'zustand';
-
-export interface InvestmentPlan {
-  id: string;
-  name: string;
-  totalValue: number;
-  icon: string; // 'Globe' | 'Landmark' | 'Building2'
-  color: string;
-  type?: string;
-  startDate?: string;
-}
+import { InvestmentPlan } from '@/models/investmentPlan.model';
+import * as investmentService from '@/services/investmentPlans.service';
+import { CreateInvestmentPlanRequest } from '@/mappers/investmentPlans.dto';
 
 interface InvestmentsState {
   investments: InvestmentPlan[];
-  addContribution: (planId: string, amount: number, date: string, note?: string) => void;
-  addInvestment: (investment: { name: string; type: string; initialValue: number; startDate: string }) => void;
+  isLoading: boolean;
+  error?: string;
+  selectedInvestment?: InvestmentPlan;
+  
+  fetchInvestmentPlans: () => Promise<void>;
+  fetchInvestmentPlanById: (id: string) => Promise<void>;
+  createInvestmentPlan: (payload: CreateInvestmentPlanRequest) => Promise<void>;
+  addContribution: (planId: string, amount: number, date: string, note?: string) => Promise<void>;
 }
 
 export const useInvestmentsStore = create<InvestmentsState>((set) => ({
-  investments: [
-    { id: '1', name: 'ETF Global (IVVB11)', totalValue: 15420.00, icon: 'Globe', color: 'bg-blue-100 text-blue-600', type: 'ETF', startDate: '2023-01-10' },
-    { id: '2', name: 'Reserva de Emergência', totalValue: 8000.00, icon: 'Landmark', color: 'bg-orange-100 text-orange-600', type: 'Poupança', startDate: '2022-05-15' },
-    { id: '3', name: 'Fundos Imobiliários', totalValue: 5120.50, icon: 'Building2', color: 'bg-purple-100 text-purple-600', type: 'FII', startDate: '2023-03-20' },
-  ],
-  addContribution: (planId, amount) => set((state) => ({
-    investments: state.investments.map((inv) => 
-      inv.id === planId ? { ...inv, totalValue: inv.totalValue + amount } : inv
-    )
-  })),
-  addInvestment: (investment) => set((state) => {
-    const icons = ['Globe', 'Landmark', 'Building2'];
-    const colors = [
-      'bg-blue-100 text-blue-600',
-      'bg-orange-100 text-orange-600',
-      'bg-purple-100 text-purple-600',
-      'bg-emerald-100 text-emerald-600'
-    ];
-    
-    const newInvestment: InvestmentPlan = {
-      id: Math.random().toString(36).substring(2, 9),
-      name: investment.name,
-      totalValue: investment.initialValue,
-      type: investment.type,
-      startDate: investment.startDate,
-      icon: icons[Math.floor(Math.random() * icons.length)],
-      color: colors[Math.floor(Math.random() * colors.length)],
-    };
-    
-    return {
-      investments: [...state.investments, newInvestment]
-    };
-  }),
+  investments: [],
+  isLoading: false,
+  error: undefined,
+  selectedInvestment: undefined,
+
+  fetchInvestmentPlans: async () => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const data = await investmentService.listInvestmentPlans();
+      set({ investments: data, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  fetchInvestmentPlanById: async (id: string) => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const data = await investmentService.getInvestmentPlanById(id);
+      set({ selectedInvestment: data, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  createInvestmentPlan: async (payload: CreateInvestmentPlanRequest) => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const newPlan = await investmentService.createInvestmentPlan(payload);
+      set((state) => ({ 
+        investments: [...state.investments, newPlan],
+        isLoading: false 
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  addContribution: async (planId: string, amount: number, date: string, note?: string) => {
+    set({ isLoading: true, error: undefined });
+    try {
+      const updatedPlan = await investmentService.addInvestmentContribution(planId, amount);
+      set((state) => ({
+        investments: state.investments.map(inv => inv.id === planId ? updatedPlan : inv),
+        isLoading: false
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  }
 }));

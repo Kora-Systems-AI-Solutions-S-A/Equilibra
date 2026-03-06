@@ -10,7 +10,7 @@ import { useUIStore } from '@/store/ui.store';
 import { useEffect } from 'react';
 
 export const DashboardPage = () => {
-  const { investments } = useInvestmentsStore();
+  const { investments, fetchInvestmentPlans } = useInvestmentsStore();
   const { fetchDebtPlans } = useDebtPlansStore();
   const { fetchMonthlyRecords, fetchAllRecords } = useMonthlyRecordsStore();
   const { openExpandedModal, openInvestmentContributionModal, openCreateInvestmentModal } = useUIStore();
@@ -19,7 +19,8 @@ export const DashboardPage = () => {
     fetchDebtPlans();
     fetchMonthlyRecords();
     fetchAllRecords();
-  }, [fetchDebtPlans, fetchMonthlyRecords, fetchAllRecords]);
+    fetchInvestmentPlans();
+  }, [fetchDebtPlans, fetchMonthlyRecords, fetchAllRecords, fetchInvestmentPlans]);
 
   const handleExpandInvestment = () => openExpandedModal('investments');
   const handleReinforceInvestment = (id: string) => openInvestmentContributionModal(id);

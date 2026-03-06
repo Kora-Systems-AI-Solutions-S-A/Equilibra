@@ -48,9 +48,9 @@ export const InvestmentContributionModal = () => {
     }
   }, [investmentContributionModal.isOpen, reset]);
 
-  const onSubmit = (data: ContributionFormValues) => {
+  const onSubmit = async (data: ContributionFormValues) => {
     if (investmentContributionModal.planId) {
-      addContribution(investmentContributionModal.planId, data.amount, data.date, data.note);
+      await addContribution(investmentContributionModal.planId, data.amount, data.date, data.note);
       alert('Reforço registrado com sucesso!');
       closeInvestmentContributionModal();
     }
@@ -71,7 +71,7 @@ export const InvestmentContributionModal = () => {
             className="p-3 rounded-xl border"
             style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}
           >
-            <p className="text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{selectedPlan?.name || 'Não selecionado'}</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{selectedPlan?.nome || 'Não selecionado'}</p>
           </div>
         </div>
 
