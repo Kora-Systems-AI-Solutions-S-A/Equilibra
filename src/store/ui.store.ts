@@ -31,6 +31,8 @@ interface UIState {
   expandedModal: { type: ExpandedModalType; cardId?: string } | null;
   dashboardFilters: DashboardFilters;
   registerModalContext: RegisterModalContext;
+  isPageTransitionLoading: boolean;
+  pageTransitionLabel?: string;
   
   openRegisterModal: (context?: RegisterModalContext) => void;
   closeRegisterModal: () => void;
@@ -51,6 +53,7 @@ interface UIState {
   openExpandedModal: (type: ExpandedModalType, cardId?: string) => void;
   closeExpandedModal: () => void;
   setDashboardFilters: (filters: Partial<DashboardFilters>) => void;
+  setPageTransitionLoading: (isLoading: boolean, label?: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -73,6 +76,8 @@ export const useUIStore = create<UIState>((set) => ({
     period: 'Este Mês'
   },
   registerModalContext: 'dashboard',
+  isPageTransitionLoading: false,
+  pageTransitionLabel: undefined,
   
   openRegisterModal: (context = 'dashboard') => set({ isRegisterModalOpen: true, registerModalContext: context }),
   closeRegisterModal: () => set({ isRegisterModalOpen: false }),
@@ -103,4 +108,5 @@ export const useUIStore = create<UIState>((set) => ({
   setDashboardFilters: (filters) => set((state) => ({ 
     dashboardFilters: { ...state.dashboardFilters, ...filters } 
   })),
+  setPageTransitionLoading: (isLoading, label) => set({ isPageTransitionLoading: isLoading, pageTransitionLabel: label }),
 }));

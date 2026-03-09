@@ -1,5 +1,6 @@
 export interface InvestmentPlanDto {
   id: string;
+  user_id: string;
   nome: string;
   tipo: string;
   valor_atual: number;

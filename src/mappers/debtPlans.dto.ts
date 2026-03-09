@@ -2,6 +2,7 @@ import { DebtPriority } from '@/models/debtPlan.model';
 
 export interface DebtPlanDto {
   id: string;
+  user_id: string;
   nome: string;
   valor_total: number;
   valor_mensal: number;

@@ -2,6 +2,7 @@ import { MonthlyRecordType, MonthlyRecordStatus } from '@/models/monthlyRecord.m
 
 export interface MonthlyRecordDto {
   id: string;
+  user_id: string;
   tipo: MonthlyRecordType;
   descricao: string;
   origem?: string;

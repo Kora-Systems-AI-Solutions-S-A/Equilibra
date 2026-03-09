@@ -1,8 +1,46 @@
 import { MonthlyRecord } from '@/models/monthlyRecord.model';
-import { addMonthsToMonthYear, getMonthsDifference } from '@/lib/date';
+import { addMonthsToMonthYear, getMonthsDifference, getCurrentMonthYear } from '@/lib/date';
+import { DashboardFilters } from '@/store/ui.store';
 
 // Filtra apenas registros ativos (Pago ou Pendente para despesas, Recebido ou Pendente para receitas)
 const isActive = (record: MonthlyRecord) => record.status !== 'Cancelado';
+
+export const filterRecordsByDashboardFilters = (
+  allRecords: MonthlyRecord[], 
+  filters: DashboardFilters,
+  currentMonthRef: string = getCurrentMonthYear()
+) => {
+  const [currentMonth, currentYear] = currentMonthRef.split('/').map(Number);
+  
+  return allRecords.filter(record => {
+    // 1. Filter by Status (Active only)
+    if (!isActive(record)) return false;
+
+    // 2. Filter by Type
+    const typeMap = { 'income': 'Receita', 'expense': 'Despesa' };
+    const mappedTypes = filters.types.map(type => typeMap[type as keyof typeof typeMap]);
+    if (!mappedTypes.includes(record.tipo)) return false;
+
+    // 3. Filter by Period
+    const [recMonth, recYear] = record.mesReferencia.split('/').map(Number);
+    const recDate = new Date(recYear, recMonth - 1, 1);
+    const currentDate = new Date(currentYear, currentMonth - 1, 1);
+
+    if (filters.period === 'Este Mês') {
+      return record.mesReferencia === currentMonthRef;
+    } else if (filters.period === 'Mês Passado') {
+      const prevDate = new Date(currentYear, currentMonth - 2, 1);
+      const prevMonth = (prevDate.getMonth() + 1).toString().padStart(2, '0');
+      const prevYear = prevDate.getFullYear();
+      return record.mesReferencia === `${prevMonth}/${prevYear}`;
+    } else if (filters.period === 'Últimos 3 Meses') {
+      const threeMonthsAgo = new Date(currentYear, currentMonth - 3, 1);
+      return recDate >= threeMonthsAgo && recDate <= currentDate;
+    }
+
+    return true;
+  });
+};
 
 // --- RECEITAS ---
 
@@ -125,4 +163,16 @@ export const getIncomeExpenseTrendChartData = (allRecords: MonthlyRecord[], curr
       expense
     };
   });
+};
+
+export const generatePath = (data: any[], key: string, height: number, width: number, padding: number = 5) => {
+  if (data.length === 0) return "";
+  const allValues = data.flatMap(d => [d.income, d.expense]);
+  const maxVal = Math.max(...allValues, 1);
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - (d[key] / maxVal) * (height - padding * 2) - padding;
+    return `${x},${y}`;
+  });
+  return `M${points.join(" L")}`;
 };

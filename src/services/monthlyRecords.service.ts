@@ -1,11 +1,12 @@
 import { MonthlyRecord, MonthlyRecordStatus } from '@/models/monthlyRecord.model';
 import { CreateMonthlyRecordRequest, UpdateMonthlyRecordRequest } from '@/mappers/monthlyRecords.dto';
-import { getCurrentMonthYear } from '@/lib/date';
+import { authService } from '@/services/auth.service';
 
 // TEMP MOCK - remover quando integração com Supabase/API estiver pronta
 let mockRecords: MonthlyRecord[] = [
   {
     id: '1',
+    userId: '1',
     tipo: 'Receita',
     descricao: 'Salário Mensal',
     origem: 'Empresa Tech',
@@ -16,6 +17,7 @@ let mockRecords: MonthlyRecord[] = [
   },
   {
     id: '2',
+    userId: '1',
     tipo: 'Receita',
     descricao: 'Freelance UI Design',
     origem: 'Cliente Exterior',
@@ -26,6 +28,7 @@ let mockRecords: MonthlyRecord[] = [
   },
   {
     id: '3',
+    userId: '1',
     tipo: 'Despesa',
     descricao: 'Aluguel Residencial',
     categoria: 'Habitação',
@@ -36,6 +39,7 @@ let mockRecords: MonthlyRecord[] = [
   },
   {
     id: '4',
+    userId: '1',
     tipo: 'Despesa',
     descricao: 'Supermercado',
     categoria: 'Alimentação',
@@ -46,6 +50,7 @@ let mockRecords: MonthlyRecord[] = [
   },
   {
     id: '5',
+    userId: '1',
     tipo: 'Despesa',
     descricao: 'Assinatura Streaming',
     categoria: 'Lazer',
@@ -57,6 +62,7 @@ let mockRecords: MonthlyRecord[] = [
   // Mês Atual (Simulado como Março 2026 baseado no contexto)
   {
     id: '6',
+    userId: '1',
     tipo: 'Receita',
     descricao: 'Salário Mensal',
     origem: 'Empresa Tech',
@@ -67,6 +73,7 @@ let mockRecords: MonthlyRecord[] = [
   },
   {
     id: '7',
+    userId: '1',
     tipo: 'Despesa',
     descricao: 'Aluguel',
     categoria: 'Habitação',
@@ -77,6 +84,7 @@ let mockRecords: MonthlyRecord[] = [
   },
   {
     id: '8',
+    userId: '1',
     tipo: 'Despesa',
     descricao: 'Energia Elétrica',
     categoria: 'Habitação',
@@ -89,30 +97,43 @@ let mockRecords: MonthlyRecord[] = [
 
 export const MonthlyRecordsService = {
   async listMonthlyRecords(monthRef?: string): Promise<MonthlyRecord[]> {
+    const userId = authService.getCurrentUserId();
+    if (!userId) return [];
+
     await new Promise(resolve => setTimeout(resolve, 300));
+    
+    let filtered = mockRecords.filter(r => r.userId === userId);
+    
     if (monthRef) {
-      return mockRecords.filter(r => r.mesReferencia === monthRef);
+      filtered = filtered.filter(r => r.mesReferencia === monthRef);
     }
-    return [...mockRecords];
+    
+    return [...filtered];
   },
 
   async getMonthlyRecordById(id: string): Promise<MonthlyRecord> {
-    const record = mockRecords.find(r => r.id === id);
+    const userId = authService.getCurrentUserId();
+    const record = mockRecords.find(r => r.id === id && r.userId === userId);
     if (!record) throw new Error('Registro não encontrado');
     return { ...record };
   },
 
   async createMonthlyRecord(payload: CreateMonthlyRecordRequest): Promise<MonthlyRecord> {
+    const userId = authService.getCurrentUserId();
+    if (!userId) throw new Error('Utilizador não autenticado');
+
     const newRecord: MonthlyRecord = {
       ...payload,
       id: Math.random().toString(36).substring(7),
+      userId,
     };
     mockRecords = [newRecord, ...mockRecords];
     return newRecord;
   },
 
   async updateMonthlyRecord(id: string, payload: UpdateMonthlyRecordRequest): Promise<MonthlyRecord> {
-    const index = mockRecords.findIndex(r => r.id === id);
+    const userId = authService.getCurrentUserId();
+    const index = mockRecords.findIndex(r => r.id === id && r.userId === userId);
     if (index === -1) throw new Error('Registro não encontrado');
     
     mockRecords[index] = { ...mockRecords[index], ...payload };
@@ -120,7 +141,8 @@ export const MonthlyRecordsService = {
   },
 
   async updateMonthlyRecordStatus(id: string, status: MonthlyRecordStatus): Promise<MonthlyRecord> {
-    const index = mockRecords.findIndex(r => r.id === id);
+    const userId = authService.getCurrentUserId();
+    const index = mockRecords.findIndex(r => r.id === id && r.userId === userId);
     if (index === -1) throw new Error('Registro não encontrado');
     
     mockRecords[index] = { ...mockRecords[index], status };

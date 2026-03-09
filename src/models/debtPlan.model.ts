@@ -6,6 +6,7 @@ export enum DebtPriority {
 
 export interface DebtPlan {
   id: string;
+  userId: string;
   nome: string;
   valorTotal: number;
   valorMensal: number;

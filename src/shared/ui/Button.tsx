@@ -9,11 +9,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
     const variants = {
-      primary: 'bg-primary text-[#111111] font-bold shadow-md hover:bg-primary-hover active:bg-primary-active active:scale-[0.98] transition-all duration-200 ease-in-out',
-      secondary: 'bg-slate-900 text-white dark:bg-primary dark:text-slate-900',
-      outline: 'bg-[var(--modal-surface,white)] border-[var(--modal-border,theme(colors.slate.200))] text-[var(--modal-text,theme(colors.slate.900))] font-semibold shadow-sm hover:opacity-80',
-      ghost: 'p-3 text-slate-400 hover:text-white transition-colors',
-      icon: 'w-11 h-11 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm relative',
+      primary: 'bg-primary text-[#111111] font-bold shadow-[0_12px_24px_rgba(74,222,128,0.2)] hover:bg-primary-hover hover:shadow-[0_16px_32px_rgba(74,222,128,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 ease-in-out',
+      secondary: 'bg-white/[0.04] text-white border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 ease-in-out shadow-inner',
+      outline: 'bg-transparent border border-[var(--button-outline-border)] text-[var(--button-outline-text)] font-semibold hover:bg-[var(--button-outline-hover)] active:scale-[0.98] transition-all duration-300',
+      ghost: 'p-3 text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all duration-300 rounded-xl',
+      icon: 'w-11 h-11 bg-white/[0.04] text-slate-400 rounded-full border border-white/[0.08] flex items-center justify-center shadow-sm relative hover:text-white hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300',
     };
 
     const sizes = {
@@ -27,7 +27,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center gap-2 rounded-lg transition-all tracking-tight',
+          'inline-flex items-center justify-center gap-2 rounded-xl transition-all tracking-tight',
           variants[variant],
           size !== 'icon' && sizes[size as keyof typeof sizes],
           variant === 'icon' && 'rounded-full',

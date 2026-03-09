@@ -11,6 +11,9 @@
   --color-background-light: #f6f8f6;
   --color-background-dark: #102216;
   --color-dark-graphite: #1a1c1a;
+  --color-graphite-deep: #0d0e0d;
+  --color-graphite-surface: #161816;
+  --color-graphite-border: rgba(255, 255, 255, 0.08);
   
   --radius-DEFAULT: 0.5rem;
   --radius-lg: 1rem;
@@ -19,7 +22,7 @@
 
 @layer base {
   body {
-    @apply bg-background-light font-display text-slate-900 overflow-hidden;
+    @apply bg-background-light font-display text-slate-900;
   }
 
   .modal-theme {
@@ -32,19 +35,78 @@
     --modal-accent-hover: #22c55e;
     --modal-danger: #ef4444;
     --modal-overlay: rgba(0, 0, 0, 0.65);
+
+    /* Adaptive Button Outline Variables */
+    --button-outline-border: rgba(255, 255, 255, 0.15);
+    --button-outline-text: #ffffff;
+    --button-outline-hover: rgba(255, 255, 255, 0.05);
+  }
+
+  :root {
+    --button-outline-border: #e2e8f0;
+    --button-outline-text: #0f172a;
+    --button-outline-hover: rgba(0, 0, 0, 0.05);
   }
 
   .btn-green {
     @apply bg-primary text-[#111111] font-bold transition-all duration-200 ease-in-out hover:bg-primary-hover active:bg-primary-active active:scale-[0.98] shadow-md hover:shadow-lg;
   }
+
+  /* Autofill styling to match dark theme */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: white !important;
+    -webkit-box-shadow: 0 0 0px 1000px #242624 inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: white;
+  }
+
+  /* For Firefox */
+  input:autofill {
+    background-color: transparent !important;
+    color: white !important;
+  }
 }
 
 @layer utilities {
+  .loading-bar {
+    transform-origin: bottom;
+    animation: equilibra-bars 1.1s ease-in-out infinite;
+  }
+
+  @keyframes equilibra-bars {
+    0%,100% {
+      transform: scaleY(0.7);
+      opacity: 0.7;
+    }
+
+    50% {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+  }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 }

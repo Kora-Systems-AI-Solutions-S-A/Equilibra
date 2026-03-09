@@ -14,9 +14,8 @@ import { calculateProgressPercent, calculateValorRestante } from '@/helpers/debt
 import { DebtPriority } from '@/models/debtPlan.model';
 import { MonthlyRecordType, MonthlyRecordStatus } from '@/models/monthlyRecord.model';
 import { motion } from 'motion/react';
-import { ModalExpandedCard } from '@/features/dashboard/shared/ModalExpandedCard';
-import { InvestmentContributionModal } from '@/features/dashboard/investimentos/InvestmentContributionModal';
-import { CreateInvestmentModal } from '@/features/dashboard/investimentos/CreateInvestmentModal';
+import { ModalExpandedCard } from '@/features/dashboard/components/ModalExpandedCard';
+import { InvestmentContributionModal, CreateInvestmentModal } from '@/features/dashboard/investimentos';
 import { AppFooter } from './AppFooter';
 import { formatCurrency, cn } from '@/lib/utils';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
@@ -41,7 +40,7 @@ const planSchema = z.object({
 });
 
 export const AppShell = () => {
-  const {
+  const { 
     isRegisterModalOpen, closeRegisterModal,
     isAddPlanModalOpen, closeAddPlanModal,
     planDrawer, closePlanDrawer,
@@ -63,25 +62,25 @@ export const AppShell = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const {
-    items: records,
-    selectedMonth,
-    createMonthlyRecord,
+  const { 
+    items: records, 
+    selectedMonth, 
+    createMonthlyRecord, 
     updateMonthlyRecord,
     selectedRecord,
-    setSelectedRecord
+    setSelectedRecord 
   } = useMonthlyRecordsStore();
-  const {
-    createDebtPlan,
-    updatePlan,
-    registerInstallmentPayment,
-    items: plans
+  const { 
+    createDebtPlan, 
+    updatePlan, 
+    registerInstallmentPayment, 
+    items: plans 
   } = useDebtPlansStore();
   const selectedPlan = plans.find(p => p.id === planDrawer.planId);
 
   const transactionForm = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: {
+    defaultValues: { 
       type: 'Despesa',
       status: 'Pendente',
       category: 'Habitação'
@@ -162,7 +161,7 @@ export const AppShell = () => {
           mesReferencia: selectedMonth,
           observacoes: data.observations,
         });
-
+        
         // If coming from monthlySummary context, don't close, just reset
         if (registerModalContext === 'monthlySummary') {
           transactionForm.reset({
@@ -224,7 +223,7 @@ export const AppShell = () => {
     // but the actual registration goes to the API
     const startMonthYear = new Date(selectedPlan.dataInicio).toLocaleDateString('pt-PT', { month: '2-digit', year: 'numeric' });
     const monthsSinceStart = getMonthsDifference(startMonthYear, currentMonthYear);
-
+    
     if (selectedPlan.parcelasPagas < monthsSinceStart) {
       const lateMonths = getMonthsBetween(startMonthYear, selectedPlan.parcelasPagas, monthsSinceStart);
       setLatePaymentData({ planId: selectedPlan.id, months: lateMonths });
@@ -243,19 +242,19 @@ export const AppShell = () => {
 
   const handleReadjustPlan = async () => {
     if (!latePaymentData || !selectedPlan) return;
-
+    
     const remainingValue = calculateValorRestante(selectedPlan);
     const monthlyPayment = selectedPlan.valorMensal;
     const newInstallmentsRemaining = Math.ceil(remainingValue / monthlyPayment);
     const currentMonthYear = getCurrentMonthYear();
     const newEnd = addMonthsToMonthYear(currentMonthYear, newInstallmentsRemaining - 1);
-
+    
     // Convert newEnd back to ISO if needed, but for now we just update the plan
     // Note: the backend should ideally handle this readjustment logic
     await updatePlan(selectedPlan.id, {
       dataTermino: new Date().toISOString(), // This is just a placeholder
     });
-
+    
     setLatePaymentData(null);
     setSelectedLateMonths([]);
   };
@@ -263,7 +262,7 @@ export const AppShell = () => {
   return (
     <div className="flex h-screen w-full bg-background-light overflow-hidden">
       <Sidebar />
-      <motion.div
+      <motion.div 
         initial={false}
         animate={{ paddingLeft: isMobile ? 0 : (sidebarCollapsed ? 84 : 240) }}
         className="flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300"
@@ -280,8 +279,8 @@ export const AppShell = () => {
         <form onSubmit={transactionForm.handleSubmit(onTransactionSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Tipo</label>
-            <select
-              {...transactionForm.register('type')}
+            <select 
+              {...transactionForm.register('type')} 
               className="rounded-lg p-2 outline-none transition-all"
               style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
             >
@@ -294,18 +293,18 @@ export const AppShell = () => {
             <>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Origem</label>
-                <input
-                  {...transactionForm.register('origin')}
+                <input 
+                  {...transactionForm.register('origin')} 
                   placeholder="Ex: Salário, Freelance..."
-                  className="rounded-lg p-2 outline-none transition-all"
+                  className="rounded-lg p-2 outline-none transition-all" 
                   style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
                 />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Descrição</label>
-                <input
-                  {...transactionForm.register('description')}
-                  className="rounded-lg p-2 outline-none transition-all"
+                <input 
+                  {...transactionForm.register('description')} 
+                  className="rounded-lg p-2 outline-none transition-all" 
                   style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
                 />
               </div>
@@ -317,8 +316,8 @@ export const AppShell = () => {
               />
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Situação</label>
-                <select
-                  {...transactionForm.register('status')}
+                <select 
+                  {...transactionForm.register('status')} 
                   className="rounded-lg p-2 outline-none transition-all"
                   style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
                 >
@@ -331,16 +330,16 @@ export const AppShell = () => {
             <>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Descrição</label>
-                <input
-                  {...transactionForm.register('description')}
-                  className="rounded-lg p-2 outline-none transition-all"
+                <input 
+                  {...transactionForm.register('description')} 
+                  className="rounded-lg p-2 outline-none transition-all" 
                   style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
                 />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Categoria</label>
-                <select
-                  {...transactionForm.register('category')}
+                <select 
+                  {...transactionForm.register('category')} 
                   className="rounded-lg p-2 outline-none transition-all"
                   style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
                 >
@@ -361,8 +360,8 @@ export const AppShell = () => {
               />
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Situação</label>
-                <select
-                  {...transactionForm.register('status')}
+                <select 
+                  {...transactionForm.register('status')} 
                   className="rounded-lg p-2 outline-none transition-all"
                   style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
                 >
@@ -380,9 +379,9 @@ export const AppShell = () => {
         <form onSubmit={planForm.handleSubmit(onPlanSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Nome do Plano</label>
-            <input
-              {...planForm.register('name')}
-              className="rounded-lg p-2 outline-none transition-all"
+            <input 
+              {...planForm.register('name')} 
+              className="rounded-lg p-2 outline-none transition-all" 
               style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
             />
           </div>
@@ -400,8 +399,8 @@ export const AppShell = () => {
           />
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Prioridade</label>
-            <select
-              {...planForm.register('priority')}
+            <select 
+              {...planForm.register('priority')} 
               className="rounded-lg p-2 outline-none transition-all"
               style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
             >
@@ -441,14 +440,14 @@ export const AppShell = () => {
       <ModalBase isOpen={!!latePaymentData} onClose={() => setLatePaymentData(null)} title="Pagamentos em Atraso" zIndex={120}>
         <div className="flex flex-col gap-6">
           <p className="text-sm text-slate-600">Existem parcelas anteriores em atraso. O que deseja fazer?</p>
-
+          
           <div className="flex flex-col gap-3">
             <p className="text-[10px] font-bold uppercase text-slate-400">Meses pendentes</p>
             <div className="max-h-[120px] overflow-y-auto flex flex-col gap-2 pr-2">
               {latePaymentData?.months.map(month => (
                 <label key={month} className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
-                  <input
-                    type="checkbox"
+                  <input 
+                    type="checkbox" 
                     checked={selectedLateMonths.includes(month)}
                     onChange={(e) => {
                       if (e.target.checked) {
@@ -481,7 +480,7 @@ export const AppShell = () => {
           const progress = calculateProgressPercent(selectedPlan);
           const remaining = calculateValorRestante(selectedPlan);
           const startMonthYear = new Date(selectedPlan.dataInicio).toLocaleDateString('pt-PT', { month: '2-digit', year: 'numeric' });
-          const endMonthYear = selectedPlan.dataTermino
+          const endMonthYear = selectedPlan.dataTermino 
             ? new Date(selectedPlan.dataTermino).toLocaleDateString('pt-PT', { month: '2-digit', year: 'numeric' })
             : '-';
 
@@ -493,8 +492,8 @@ export const AppShell = () => {
                   <span className={cn(
                     "px-2 py-1 rounded text-[10px] font-bold uppercase",
                     selectedPlan.prioridade === 'Alta' ? "bg-red-100 text-red-600" :
-                      selectedPlan.prioridade === 'Média' ? "bg-orange-100 text-orange-600" :
-                        "bg-blue-100 text-blue-600"
+                    selectedPlan.prioridade === 'Média' ? "bg-orange-100 text-orange-600" :
+                    "bg-blue-100 text-blue-600"
                   )}>
                     Prioridade {selectedPlan.prioridade}
                   </span>

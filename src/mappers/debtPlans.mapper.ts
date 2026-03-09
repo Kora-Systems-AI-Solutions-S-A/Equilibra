@@ -1,9 +1,10 @@
 import { DebtPlan } from '@/models/debtPlan.model';
-import { DebtPlanDto, CreateDebtPlanRequest } from './debtPlans.dto';
+import { DebtPlanDto, CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
 
 export const debtPlanMapper = {
   toDomain: (dto: DebtPlanDto): DebtPlan => ({
     id: dto.id,
+    userId: dto.user_id,
     nome: dto.nome,
     valorTotal: dto.valor_total,
     valorMensal: dto.valor_mensal,

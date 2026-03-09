@@ -1,5 +1,6 @@
 export interface InvestmentPlan {
   id: string;
+  userId: string;
   nome: string;
   tipo: string;
   valorAtual: number;

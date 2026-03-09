@@ -4,6 +4,7 @@ export type MonthlyRecordStatus = 'Recebido' | 'Pago' | 'Pendente' | 'Cancelado'
 
 export interface MonthlyRecord {
   id: string;
+  userId: string;
   tipo: MonthlyRecordType;
   descricao: string;
   origem?: string;

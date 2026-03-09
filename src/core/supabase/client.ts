@@ -1,11 +1,14 @@
 import { env } from '../config/env';
 
-// Placeholder for future Supabase client integration
-// This will be used once Supabase is configured
+// Mock Supabase client for now to prevent crashes when environment variables are missing
+// This will be replaced with createClient once Supabase is fully configured
 export const supabase = {
-  // Mock client for now to prevent crashes
   auth: {
     getSession: async () => ({ data: { session: null }, error: null }),
+    signInWithPassword: async () => ({ data: { session: null }, error: new Error('Supabase not configured') }),
+    signUp: async () => ({ data: { session: null }, error: new Error('Supabase not configured') }),
+    signInWithOAuth: async () => ({ error: new Error('Supabase not configured') }),
+    signOut: async () => ({ error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },
   from: (table: string) => ({

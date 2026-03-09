@@ -22,3 +22,8 @@ export const formatDate = (dateString: string) => {
     year: 'numeric',
   }).format(date);
 };
+
+export const formatK = (val: number) => {
+  if (Math.abs(val) >= 1000) return `€ ${(val / 1000).toFixed(1)}k`.replace('.', ',');
+  return formatCurrency(val);
+};

@@ -1,9 +1,10 @@
 import { InvestmentPlan } from '@/models/investmentPlan.model';
-import { InvestmentPlanDto } from './investmentPlans.dto';
+import { InvestmentPlanDto } from '@/mappers/investmentPlans.dto';
 
 export const mapInvestmentPlanToModel = (dto: InvestmentPlanDto): InvestmentPlan => {
   return {
     id: dto.id,
+    userId: dto.user_id,
     nome: dto.nome,
     tipo: dto.tipo,
     valorAtual: dto.valor_atual,
@@ -21,6 +22,7 @@ export const mapInvestmentPlanToModel = (dto: InvestmentPlanDto): InvestmentPlan
 export const mapInvestmentPlanToDto = (model: InvestmentPlan): InvestmentPlanDto => {
   return {
     id: model.id,
+    user_id: model.userId,
     nome: model.nome,
     tipo: model.tipo,
     valor_atual: model.valorAtual,

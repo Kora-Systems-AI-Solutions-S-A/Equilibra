@@ -1,9 +1,10 @@
 import { MonthlyRecord } from '@/models/monthlyRecord.model';
-import { MonthlyRecordDto, CreateMonthlyRecordRequest } from './monthlyRecords.dto';
+import { MonthlyRecordDto, CreateMonthlyRecordRequest } from '@/mappers/monthlyRecords.dto';
 
 export const monthlyRecordMapper = {
   toDomain: (dto: MonthlyRecordDto): MonthlyRecord => ({
     id: dto.id,
+    userId: dto.user_id,
     tipo: dto.tipo,
     descricao: dto.descricao,
     origem: dto.origem,
@@ -17,6 +18,7 @@ export const monthlyRecordMapper = {
 
   toDto: (model: MonthlyRecord): MonthlyRecordDto => ({
     id: model.id,
+    user_id: model.userId,
     tipo: model.tipo,
     descricao: model.descricao,
     origem: model.origem,

@@ -7,12 +7,15 @@ import {
   Settings, 
   ChevronLeft,
   ChevronRight,
-  Scale
+  Scale,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuthStore } from '@/store/auth.store';
 
 export const Sidebar = () => {
-  const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar, setPageTransitionLoading } = useUIStore();
+  const { logout, user } = useAuthStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -27,8 +30,17 @@ export const Sidebar = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const handleLogout = async () => {
+    setPageTransitionLoading(true, "A encerrar a sessão...");
+    try {
+      await logout();
+    } catch (err) {
+      setPageTransitionLoading(false);
+    }
+  };
+
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/app/home' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/home' },
   ];
 
   const sidebarWidth = sidebarCollapsed ? 84 : 240;
@@ -135,39 +147,61 @@ export const Sidebar = () => {
             "flex items-center gap-3 w-full transition-all duration-300",
             !isMobile && sidebarCollapsed ? "flex-col" : "bg-slate-800/40 p-3 rounded-2xl border border-slate-700/30"
           )}>
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-700 shrink-0">
-              <img
-                alt="User profile"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBE2WrhyRt6tesOraeKtyBzv3LUoOWznmvIFW_tLWnM17FHR-bHOVpKF6K4Yc5awGwYOr7I_lUhR5s93kYfG4CLB_jo5NPl4olePpNeWJh1dUTD75Lwzb9NRZbspglm1_QUiX01ZWAd-uknUBxgzBoPVWCPvTcy4LqGJYicFSuWTaewgSX1HQCHoTTLuv5dQT0s89qzodskAopwhb2NMRJfDFCtwBw5gPDsl6xI-b6NsN4-EeMOGeo0FN_fV3sDLFQGMMKXOUUccU"
-              />
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-700 shrink-0 bg-slate-800 flex items-center justify-center">
+              {user?.avatarUrl ? (
+                <img
+                  alt="User profile"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                  src={user.avatarUrl}
+                />
+              ) : (
+                <span className="text-xs font-bold text-primary">{user?.name?.charAt(0) || 'U'}</span>
+              )}
             </div>
             
             {(isMobile || !sidebarCollapsed) && (
               <div className="flex-1 min-w-0 flex items-center justify-between">
                 <div className="flex flex-col min-w-0">
-                  <p className="text-sm font-bold text-white truncate">Misty</p>
-                  <p className="text-[10px] text-slate-500 truncate">Premium Plan</p>
+                  <p className="text-sm font-bold text-white truncate">{user?.name || 'Utilizador'}</p>
+                  <p className="text-[10px] text-slate-500 truncate">Plano Premium</p>
                 </div>
-                <button 
-                  onClick={() => alert('Configurações (em breve)')}
-                  className="text-slate-400 hover:text-white transition-all duration-200 p-2 hover:bg-slate-700/40 rounded-lg active:scale-95"
-                  title="Configurações"
-                >
-                  <Settings size={18} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => alert('Configurações (em breve)')}
+                    className="text-slate-400 hover:text-white transition-all duration-200 p-2 hover:bg-slate-700/40 rounded-lg active:scale-95"
+                    title="Configurações"
+                  >
+                    <Settings size={18} />
+                  </button>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-slate-400 hover:text-red-400 transition-all duration-200 p-2 hover:bg-red-500/10 rounded-lg active:scale-95"
+                    title="Sair"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
               </div>
             )}
 
             {!isMobile && sidebarCollapsed && (
-              <button 
-                onClick={() => alert('Configurações (em breve)')}
-                className="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800/50"
-                title="Configurações"
-              >
-                <Settings size={20} />
-              </button>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => alert('Configurações (em breve)')}
+                  className="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800/50"
+                  title="Configurações"
+                >
+                  <Settings size={20} />
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="text-slate-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
+                  title="Sair"
+                >
+                  <LogOut size={20} />
+                </button>
+              </div>
             )}
           </div>
         </div>

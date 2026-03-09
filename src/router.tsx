@@ -1,42 +1,30 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from './shared/layout/AppShell';
 import { DashboardPage } from './pages/DashboardPage';
-
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="flex-1 flex items-center justify-center">
-    <h1 className="text-2xl font-bold text-slate-400">{title}</h1>
-  </div>
-);
+import { AuthPage } from './pages/AuthPage';
+import { ProtectedRoute } from './shared/layout/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/app/home" replace />,
+    element: <AuthPage />,
   },
   {
-    path: '/login',
-    element: <PlaceholderPage title="Login Page" />,
-  },
-  {
-    path: '/app',
-    element: <AppShell />,
+    path: '/home',
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
     children: [
       {
-        path: 'home',
+        index: true,
         element: <DashboardPage />,
       },
-      {
-        path: 'monthly-summary',
-        element: <PlaceholderPage title="Resumo Mensal" />,
-      },
-      {
-        path: 'income',
-        element: <PlaceholderPage title="Entradas de Renda" />,
-      },
-      {
-        path: 'debts',
-        element: <PlaceholderPage title="Planejamento de Dívidas" />,
-      },
     ],
+  },
+  {
+    path: '*',
+    element: <Navigate to="/" replace />,
   },
 ]);
