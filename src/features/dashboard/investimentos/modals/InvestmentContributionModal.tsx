@@ -19,8 +19,17 @@ type ContributionFormValues = z.infer<typeof contributionSchema>;
 export const InvestmentContributionModal = () => {
   const { investmentContributionModal, closeInvestmentContributionModal } = useUIStore();
   const { investments, addContribution } = useInvestmentsStore();
-  
-  const selectedPlan = investments.find(inv => inv.id === investmentContributionModal.planId);
+
+  const [lastPlanId, setLastPlanId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (investmentContributionModal.planId) {
+      setLastPlanId(investmentContributionModal.planId);
+    }
+  }, [investmentContributionModal.planId]);
+
+  const activePlanId = investmentContributionModal.planId || lastPlanId;
+  const selectedPlan = investments.find(inv => inv.id === activePlanId);
 
   const {
     register,
@@ -67,7 +76,7 @@ export const InvestmentContributionModal = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Plano Selecionado</label>
-          <div 
+          <div
             className="p-3 rounded-xl border"
             style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}
           >

@@ -34,7 +34,7 @@ export const DrawerBase = ({ isOpen, onClose, title, children }: DrawerBaseProps
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="modal-theme">
+        <motion.div className="modal-theme" key="drawer-wrapper" exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -51,13 +51,13 @@ export const DrawerBase = ({ isOpen, onClose, title, children }: DrawerBaseProps
             className="fixed right-0 top-0 h-full w-full max-w-md shadow-2xl z-[111] overflow-hidden flex flex-col"
             style={{ backgroundColor: 'var(--modal-bg)', color: 'var(--modal-text)' }}
           >
-            <div 
+            <div
               className="p-6 border-b flex justify-between items-center"
               style={{ borderColor: 'var(--modal-border)' }}
             >
               <h3 className="text-lg font-semibold" style={{ color: 'var(--modal-text)' }}>{title}</h3>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 className="transition-colors hover:opacity-70"
                 style={{ color: 'var(--modal-muted)' }}
               >
@@ -68,7 +68,7 @@ export const DrawerBase = ({ isOpen, onClose, title, children }: DrawerBaseProps
               {children}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

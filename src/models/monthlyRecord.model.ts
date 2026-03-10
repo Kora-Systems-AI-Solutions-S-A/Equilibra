@@ -2,6 +2,7 @@ export type MonthlyRecordType = 'Receita' | 'Despesa';
 
 export type MonthlyRecordStatus = 'Recebido' | 'Pago' | 'Pendente' | 'Cancelado';
 
+// ID e userId sempre existirão quando vindo do banco.
 export interface MonthlyRecord {
   id: string;
   userId: string;

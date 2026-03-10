@@ -5,10 +5,10 @@ import { useDebtPlansStore } from '@/store/debtPlans.store';
 import { useMonthlyRecordsStore } from '@/store/monthlyRecords.store';
 import { DebtPlan } from '@/models/debtPlan.model';
 import { calculateProgressPercent, sortPlansForDashboard } from '@/helpers/debtPlan.calculations';
-import { 
-  getIncomeRecords, 
-  getTotalReceivedInMonth, 
-  getIncomeMonthComparison, 
+import {
+  getIncomeRecords,
+  getTotalReceivedInMonth,
+  getIncomeMonthComparison,
   getProjectedNextMonthIncome,
   getTotalIncomeInMonth,
   getTotalActiveExpensesInMonth,
@@ -26,20 +26,20 @@ import { Tooltip } from '@/shared/ui/Tooltip';
 import { useInvestmentsStore } from '@/store/investments.store';
 
 export const ModalExpandedCard = () => {
-  const { 
-    expandedModal, 
-    closeExpandedModal, 
-    openPlanDrawer, 
+  const {
+    expandedModal,
+    closeExpandedModal,
+    openPlanDrawer,
     openInvestmentContributionModal,
     openRegisterModal,
     dashboardFilters
   } = useUIStore();
   const { items: plans } = useDebtPlansStore();
-  const { 
+  const {
     allRecords,
-    selectedMonth, 
-    markAsReceived, 
-    markAsPaid, 
+    selectedMonth,
+    markAsReceived,
+    markAsPaid,
     cancelRecord,
     setSelectedRecord
   } = useMonthlyRecordsStore();
@@ -48,10 +48,15 @@ export const ModalExpandedCard = () => {
   const filteredRecords = filterRecordsByDashboardFilters(allRecords, dashboardFilters, selectedMonth);
 
   const [summaryFilter, setSummaryFilter] = useState<'Todos' | 'Pago' | 'Pendente'>('Todos');
+  const [lastType, setLastType] = useState<string | null>(null);
 
-  if (!expandedModal) return null;
+  React.useEffect(() => {
+    if (expandedModal?.type) {
+      setLastType(expandedModal.type);
+    }
+  }, [expandedModal?.type]);
 
-  const { type } = expandedModal;
+  const type = expandedModal?.type || lastType;
 
   const iconMap = {
     Globe,
@@ -61,36 +66,36 @@ export const ModalExpandedCard = () => {
 
   const getRecordActions = (record: any): ActionItem[] => {
     const actions: ActionItem[] = [
-      { 
-        label: 'Editar', 
+      {
+        label: 'Editar',
         onClick: () => {
           setSelectedRecord(record);
           openRegisterModal();
-        }, 
-        icon: <Edit2 size={14} /> 
+        },
+        icon: <Edit2 size={14} />
       }
     ];
 
     if (record.status === 'Pendente') {
       if (record.tipo === 'Receita') {
-        actions.push({ 
-          label: 'Marcar como Recebido', 
-          onClick: () => markAsReceived(record.id), 
-          icon: <CheckCircle2 size={14} className="text-green-500" /> 
+        actions.push({
+          label: 'Marcar como Recebido',
+          onClick: () => markAsReceived(record.id),
+          icon: <CheckCircle2 size={14} className="text-green-500" />
         });
       } else {
-        actions.push({ 
-          label: 'Marcar como Pago', 
-          onClick: () => markAsPaid(record.id), 
-          icon: <CheckCircle2 size={14} className="text-green-500" /> 
+        actions.push({
+          label: 'Marcar como Pago',
+          onClick: () => markAsPaid(record.id),
+          icon: <CheckCircle2 size={14} className="text-green-500" />
         });
       }
     }
 
     if (record.status !== 'Cancelado') {
-      actions.push({ 
-        label: 'Cancelar', 
-        onClick: () => cancelRecord(record.id), 
+      actions.push({
+        label: 'Cancelar',
+        onClick: () => cancelRecord(record.id),
         icon: <XCircle size={14} className="text-red-500" />,
         variant: 'danger'
       });
@@ -116,9 +121,9 @@ export const ModalExpandedCard = () => {
                     <p className="text-sm font-black" style={{ color: 'var(--modal-text)' }}>{formatCurrency(inv.valorAtual)}</p>
                   </div>
                 </div>
-                <Button 
-                  variant="primary" 
-                  size="md" 
+                <Button
+                  variant="primary"
+                  size="md"
                   className="w-full"
                   onClick={() => openInvestmentContributionModal(inv.id)}
                 >
@@ -183,8 +188,8 @@ export const ModalExpandedCard = () => {
                         <span className={cn(
                           "px-2 py-0.5 rounded text-[9px] font-bold uppercase",
                           plan.prioridade === 'Alta' ? "bg-red-100 text-red-600" :
-                          plan.prioridade === 'Média' ? "bg-orange-100 text-orange-600" :
-                          "bg-blue-100 text-blue-600"
+                            plan.prioridade === 'Média' ? "bg-orange-100 text-orange-600" :
+                              "bg-blue-100 text-blue-600"
                         )}>
                           {plan.prioridade}
                         </span>
@@ -386,11 +391,11 @@ export const ModalExpandedCard = () => {
                   const offset = arr.slice(0, i).reduce((acc, c) => acc + (c.value / totalVal) * 100, 0);
                   const colors = ['#3b82f6', '#f59e0b', '#8b5cf6'];
                   return (
-                    <circle 
+                    <circle
                       key={cat.name}
-                      cx="18" cy="18" fill="transparent" r="16" 
-                      stroke={colors[i % colors.length]} 
-                      strokeDasharray={`${percent}, 100`} 
+                      cx="18" cy="18" fill="transparent" r="16"
+                      stroke={colors[i % colors.length]}
+                      strokeDasharray={`${percent}, 100`}
                       strokeDashoffset={`-${offset}`}
                       strokeLinecap="round" strokeWidth="4"
                     ></circle>
@@ -421,7 +426,7 @@ export const ModalExpandedCard = () => {
               <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 120">
                 <path d={incomePath} fill="none" stroke="var(--modal-accent)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
                 <path d={expensePath} fill="none" stroke="var(--modal-danger)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
-                
+
                 {trendData.map((d, i) => {
                   const x = (i / (trendData.length - 1)) * 400;
                   const allValues = trendData.flatMap(v => [v.income, v.expense]);
@@ -461,8 +466,8 @@ export const ModalExpandedCard = () => {
                     onClick={() => setSummaryFilter(f)}
                     className={cn(
                       "px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all",
-                      summaryFilter === f 
-                        ? "bg-[var(--modal-accent)] text-black" 
+                      summaryFilter === f
+                        ? "bg-[var(--modal-accent)] text-black"
                         : "text-[var(--modal-muted)] hover:text-[var(--modal-text)]"
                     )}
                   >
@@ -500,8 +505,8 @@ export const ModalExpandedCard = () => {
                       <td className="px-6 py-4">
                         <span className={cn(
                           "text-[10px] font-bold uppercase",
-                          t.status === 'Pago' || t.status === 'Recebido' ? 'text-green-400' : 
-                          t.status === 'Cancelado' ? 'text-slate-500' : 'text-orange-400'
+                          t.status === 'Pago' || t.status === 'Recebido' ? 'text-green-400' :
+                            t.status === 'Cancelado' ? 'text-slate-500' : 'text-orange-400'
                         )}>
                           {t.status}
                         </span>
@@ -528,7 +533,7 @@ export const ModalExpandedCard = () => {
         <div className="absolute bottom-6 right-6 pointer-events-none z-20">
           <div className="pointer-events-auto">
             <Tooltip content="Registrar movimentação" className="right-0 left-auto translate-x-0">
-              <button 
+              <button
                 onClick={() => openRegisterModal('monthlySummary')}
                 className="w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
               >

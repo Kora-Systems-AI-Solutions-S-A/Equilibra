@@ -18,7 +18,7 @@ export const DebtPlanningCard = () => {
     <div className="bg-white rounded-xl p-6 md:p-8 pb-20 md:pb-20 shadow-sm border border-slate-100 relative flex flex-col min-h-[288px]">
       <div className="flex justify-between items-start mb-6">
         <h3 className="text-slate-900 text-lg font-semibold">Planejamento de Dívidas</h3>
-        <button 
+        <button
           onClick={() => openExpandedModal('debts')}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
@@ -36,9 +36,9 @@ export const DebtPlanningCard = () => {
                     <p className="text-sm font-semibold text-slate-800">{plan.nome}</p>
                     <span className={cn(
                       "text-[9px] font-bold uppercase w-fit",
-                      plan.prioridade === 'Alta' ? "text-red-500" :
-                      plan.prioridade === 'Média' ? "text-orange-500" :
-                      "text-blue-500"
+                      plan.prioridade === 'Alta' ? "text-danger" :
+                        plan.prioridade === 'Média' ? "text-warning" :
+                          "text-info"
                     )}>
                       {plan.prioridade}
                     </span>
@@ -49,8 +49,8 @@ export const DebtPlanningCard = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-2 flex rounded-full overflow-hidden bg-slate-100">
-                    <div className="h-full bg-[#22C55E]" style={{ width: `${progress}%` }}></div>
-                    <div className="h-full bg-[#EF4444]" style={{ width: `${100 - progress}%` }}></div>
+                    <div className="h-full bg-success" style={{ width: `${progress}%` }}></div>
+                    <div className="h-full bg-danger" style={{ width: `${100 - progress}%` }}></div>
                   </div>
                   <span className="text-[10px] font-bold text-slate-400">{progress}%</span>
                 </div>
@@ -62,7 +62,7 @@ export const DebtPlanningCard = () => {
 
       <div className="absolute bottom-5 right-4">
         <Tooltip content="Criar plano de quitação">
-          <button 
+          <button
             onClick={openAddPlanModal}
             className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
           >
