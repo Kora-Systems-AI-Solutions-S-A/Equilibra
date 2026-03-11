@@ -9,10 +9,10 @@ import { Button } from '@/shared/ui/Button';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
 
 const investmentSchema = z.object({
-  nome: z.string().min(1, 'O nome é obrigatório'),
-  tipo: z.string().min(1, 'O tipo é obrigatório'),
-  valor_atual: z.number().min(0.01, 'O valor deve ser maior que zero'),
-  data_inicio: z.string().min(1, 'A data é obrigatória'),
+  name: z.string().min(1, 'O nome é obrigatório'),
+  type: z.string().min(1, 'O tipo é obrigatório'),
+  initial_amount: z.number().min(0.01, 'O valor deve ser maior que zero'),
+  start_date: z.string().min(1, 'A data é obrigatória'),
 });
 
 type InvestmentFormValues = z.infer<typeof investmentSchema>;
@@ -31,16 +31,15 @@ export const CreateInvestmentModal = () => {
   } = useForm<InvestmentFormValues>({
     resolver: zodResolver(investmentSchema),
     defaultValues: {
-      nome: '',
-      tipo: 'Ações',
-      valor_atual: 0,
-      data_inicio: new Date().toISOString().split('T')[0],
+      name: '',
+      type: 'Ações',
+      initial_amount: 0,
+      start_date: new Date().toISOString().split('T')[0],
     },
   });
 
   const onSubmit = async (data: InvestmentFormValues) => {
     await createInvestmentPlan(data);
-    alert('Investimento criado com sucesso!');
     closeCreateInvestmentModal();
     reset();
   };
@@ -56,18 +55,18 @@ export const CreateInvestmentModal = () => {
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Nome do Investimento</label>
           <input
-            {...register('nome')}
+            {...register('name')}
             className="w-full p-3 rounded-xl outline-none transition-colors font-bold"
             style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
             placeholder="Ex: Apple Inc."
           />
-          {errors.nome && <p className="text-[10px] text-red-500 font-bold">{errors.nome.message}</p>}
+          {errors.name && <p className="text-[10px] text-red-500 font-bold">{errors.name.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Tipo</label>
           <select
-            {...register('tipo')}
+            {...register('type')}
             className="w-full p-3 rounded-xl outline-none transition-colors"
             style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
           >
@@ -77,25 +76,25 @@ export const CreateInvestmentModal = () => {
             <option value="Cripto">Cripto</option>
             <option value="FII">Fundos Imobiliários</option>
           </select>
-          {errors.tipo && <p className="text-[10px] text-red-500 font-bold">{errors.tipo.message}</p>}
+          {errors.type && <p className="text-[10px] text-red-500 font-bold">{errors.type.message}</p>}
         </div>
 
         <MoneyInput
           label="Valor Inicial"
-          value={watch('valor_atual') || 0}
-          onChange={(val) => setValue('valor_atual', val)}
-          error={errors.valor_atual?.message}
+          value={watch('initial_amount') || 0}
+          onChange={(val) => setValue('initial_amount', val)}
+          error={errors.initial_amount?.message}
         />
 
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold uppercase" style={{ color: 'var(--modal-muted)' }}>Data de Início</label>
           <input
             type="date"
-            {...register('data_inicio')}
+            {...register('start_date')}
             className="w-full p-3 rounded-xl outline-none transition-colors"
             style={{ backgroundColor: 'var(--modal-surface)', color: 'var(--modal-text)', border: '1px solid var(--modal-border)' }}
           />
-          {errors.data_inicio && <p className="text-[10px] text-red-500 font-bold">{errors.data_inicio.message}</p>}
+          {errors.start_date && <p className="text-[10px] text-red-500 font-bold">{errors.start_date.message}</p>}
         </div>
 
         <div className="flex gap-3 pt-2">

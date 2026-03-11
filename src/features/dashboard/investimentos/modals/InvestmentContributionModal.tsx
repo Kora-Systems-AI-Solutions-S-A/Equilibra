@@ -60,7 +60,6 @@ export const InvestmentContributionModal = () => {
   const onSubmit = async (data: ContributionFormValues) => {
     if (investmentContributionModal.planId) {
       await addContribution(investmentContributionModal.planId, data.amount, data.date, data.note);
-      alert('Reforço registrado com sucesso!');
       closeInvestmentContributionModal();
     }
   };

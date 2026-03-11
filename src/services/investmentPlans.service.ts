@@ -1,74 +1,138 @@
-import { InvestmentPlan } from '@/models/investmentPlan.model';
+import { InvestmentPlan, InvestmentContribution } from '@/models/investmentPlan.model';
 import { CreateInvestmentPlanRequest, UpdateInvestmentPlanRequest } from '@/mappers/investmentPlans.dto';
-import { authService } from '@/services/auth.service';
+import { investmentPlanMapper } from '@/mappers/investmentPlans.mapper';
+import { supabase } from '@/core/supabase/client';
 
-// TEMP MOCK - remover quando integração com Supabase/API real estiver pronta
-const mockInvestments: InvestmentPlan[] = [
-  { id: '1', userId: '1', nome: 'ETF Global (IVVB11)', valorAtual: 15420.00, icone: 'Globe', cor: 'bg-blue-100 text-blue-600', tipo: 'ETF', dataInicio: '2023-01-10', status: 'Ativo' },
-  { id: '2', userId: '1', nome: 'Reserva de Emergência', valorAtual: 8000.00, icone: 'Landmark', cor: 'bg-orange-100 text-orange-600', tipo: 'Poupança', dataInicio: '2022-05-15', status: 'Ativo' },
-  { id: '3', userId: '1', nome: 'Fundos Imobiliários', valorAtual: 5120.50, icone: 'Building2', cor: 'bg-purple-100 text-purple-600', tipo: 'FII', dataInicio: '2023-03-20', status: 'Ativo' },
-];
+export const InvestmentPlansService = {
+  async listInvestmentPlans(userId: string): Promise<InvestmentPlan[]> {
+    const { data: plansData, error: plansError } = await supabase
+      .from('investments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-export const listInvestmentPlans = async (): Promise<InvestmentPlan[]> => {
-  const userId = authService.getCurrentUserId();
-  if (!userId) return [];
-  return mockInvestments.filter(inv => inv.userId === userId);
-};
+    if (plansError) throw new Error(plansError.message);
+    if (!plansData) return [];
 
-export const getInvestmentPlanById = async (id: string): Promise<InvestmentPlan | undefined> => {
-  const userId = authService.getCurrentUserId();
-  return mockInvestments.find(inv => inv.id === id && inv.userId === userId);
-};
+    const { data: contribData, error: contribError } = await supabase
+      .from('investment_contributions')
+      .select('investment_id, amount');
 
-export const createInvestmentPlan = async (payload: CreateInvestmentPlanRequest): Promise<InvestmentPlan> => {
-  const userId = authService.getCurrentUserId();
-  if (!userId) throw new Error('Utilizador não autenticado');
+    if (contribError) throw new Error(contribError.message);
 
-  const icons = ['Globe', 'Landmark', 'Building2'];
-  const colors = [
-    'bg-blue-100 text-blue-600',
-    'bg-orange-100 text-orange-600',
-    'bg-purple-100 text-purple-600',
-    'bg-emerald-100 text-emerald-600'
-  ];
-  
-  const newInvestment: InvestmentPlan = {
-    id: Math.random().toString(36).substring(2, 9),
-    userId,
-    nome: payload.nome,
-    valorAtual: payload.valor_atual,
-    tipo: payload.tipo,
-    dataInicio: payload.data_inicio,
-    icone: icons[Math.floor(Math.random() * icons.length)],
-    cor: colors[Math.floor(Math.random() * colors.length)],
-    status: 'Ativo',
-  };
-  
-  mockInvestments.push(newInvestment);
-  return newInvestment;
-};
+    return plansData.map(planRow => {
+      const contributions = contribData?.filter(c => c.investment_id === planRow.id) || [];
+      const totalContributions = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
 
-export const updateInvestmentPlan = async (id: string, payload: UpdateInvestmentPlanRequest): Promise<InvestmentPlan> => {
-  const userId = authService.getCurrentUserId();
-  const index = mockInvestments.findIndex(inv => inv.id === id && inv.userId === userId);
-  if (index === -1) throw new Error('Investment not found');
-  
-  const updated = { ...mockInvestments[index] };
-  if (payload.nome !== undefined) updated.nome = payload.nome;
-  if (payload.tipo !== undefined) updated.tipo = payload.tipo;
-  if (payload.valor_atual !== undefined) updated.valorAtual = payload.valor_atual;
-  if (payload.data_inicio !== undefined) updated.dataInicio = payload.data_inicio;
-  
-  mockInvestments[index] = updated;
-  return updated;
-};
+      const domainPlan = investmentPlanMapper.toDomain(planRow);
+      domainPlan.valorAtual = domainPlan.valorInicial + totalContributions;
+      return domainPlan;
+    });
+  },
 
-export const addInvestmentContribution = async (id: string, amount: number): Promise<InvestmentPlan> => {
-  const userId = authService.getCurrentUserId();
-  const index = mockInvestments.findIndex(inv => inv.id === id && inv.userId === userId);
-  if (index === -1) throw new Error('Investment not found');
-  
-  const updated = { ...mockInvestments[index], valorAtual: mockInvestments[index].valorAtual + amount };
-  mockInvestments[index] = updated;
-  return updated;
+  async getInvestmentPlanById(userId: string, id: string): Promise<InvestmentPlan> {
+    const { data: planData, error: planError } = await supabase
+      .from('investments')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (planError) throw new Error(planError.message);
+    if (!planData) throw new Error('Plano de investimento não encontrado');
+
+    const { data: contribData, error: contribError } = await supabase
+      .from('investment_contributions')
+      .select('amount')
+      .eq('investment_id', id);
+
+    if (contribError) throw new Error(contribError.message);
+
+    const totalContributions = (contribData || []).reduce((sum, c) => sum + Number(c.amount), 0);
+    const domainPlan = investmentPlanMapper.toDomain(planData);
+    domainPlan.valorAtual = domainPlan.valorInicial + totalContributions;
+
+    return domainPlan;
+  },
+
+  async createInvestmentPlan(userId: string, payload: CreateInvestmentPlanRequest): Promise<InvestmentPlan> {
+    const icons = ['Globe', 'Landmark', 'Building2'];
+    const colors = [
+      'bg-blue-100 text-blue-600',
+      'bg-orange-100 text-orange-600',
+      'bg-purple-100 text-purple-600',
+      'bg-emerald-100 text-emerald-600'
+    ];
+
+    // Pick random icon and color if not provided
+    const payloadWithDefaults = {
+      ...payload,
+      icon: payload.icon || icons[Math.floor(Math.random() * icons.length)],
+      color: payload.color || colors[Math.floor(Math.random() * colors.length)],
+    };
+
+    const { data, error } = await supabase
+      .from('investments')
+      .insert({
+        user_id: userId,
+        name: payloadWithDefaults.name,
+        type: payloadWithDefaults.type,
+        target_amount: payloadWithDefaults.target_amount || 0,
+        initial_amount: payloadWithDefaults.initial_amount,
+        institution: payloadWithDefaults.institution,
+        status: payloadWithDefaults.status || 'Ativo',
+        start_date: payloadWithDefaults.start_date || new Date().toISOString(),
+        icon: payloadWithDefaults.icon,
+        color: payloadWithDefaults.color,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return investmentPlanMapper.toDomain(data);
+  },
+
+  async updateInvestmentPlan(userId: string, id: string, updates: UpdateInvestmentPlanRequest): Promise<InvestmentPlan> {
+    const { data, error } = await supabase
+      .from('investments')
+      .update({
+        name: updates.name,
+        type: updates.type,
+        target_amount: updates.target_amount,
+        institution: updates.institution,
+        status: updates.status,
+        start_date: updates.start_date,
+        icon: updates.icon,
+        color: updates.color,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    // Fetch recalculated domain plan
+    return this.getInvestmentPlanById(userId, id);
+  },
+
+  async addInvestmentContribution(userId: string, planId: string, amount: number, date?: string, note?: string): Promise<InvestmentPlan> {
+    // Basic verification
+    await this.getInvestmentPlanById(userId, planId);
+
+    const { error } = await supabase
+      .from('investment_contributions')
+      .insert({
+        investment_id: planId,
+        amount: amount,
+        occurred_at: date || new Date().toISOString(),
+        notes: note,
+      });
+
+    if (error) throw new Error(error.message);
+
+    // Fetch recalculated total amount
+    return this.getInvestmentPlanById(userId, planId);
+  },
 };

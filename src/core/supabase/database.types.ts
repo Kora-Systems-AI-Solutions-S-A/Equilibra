@@ -153,8 +153,99 @@ export interface Database {
                         referencedColumns: ["id"]
                     }
                 ]
-            }
-        }
+            },
+            investments: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    name: string;
+                    type: string;
+                    target_amount: number;
+                    initial_amount: number;
+                    institution: string | null;
+                    status: string;
+                    start_date: string;
+                    icon: string;
+                    color: string;
+                    created_at: string;
+                    updated_at: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    name: string;
+                    type: string;
+                    target_amount?: number;
+                    initial_amount?: number;
+                    institution?: string | null;
+                    status?: string;
+                    start_date?: string;
+                    icon?: string;
+                    color?: string;
+                    created_at?: string;
+                    updated_at?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    name?: string;
+                    type?: string;
+                    target_amount?: number;
+                    initial_amount?: number;
+                    institution?: string | null;
+                    status?: string;
+                    start_date?: string;
+                    icon?: string;
+                    color?: string;
+                    created_at?: string;
+                    updated_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'investments_user_id_fkey';
+                        columns: ['user_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'profiles';
+                        referencedColumns: ['id'];
+                    }
+                ];
+            };
+            investment_contributions: {
+                Row: {
+                    id: string;
+                    investment_id: string;
+                    amount: number;
+                    occurred_at: string;
+                    notes: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    investment_id: string;
+                    amount: number;
+                    occurred_at?: string;
+                    notes?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    investment_id?: string;
+                    amount?: number;
+                    occurred_at?: string;
+                    notes?: string | null;
+                    created_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'investment_contributions_investment_id_fkey';
+                        columns: ['investment_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'investments';
+                        referencedColumns: ['id'];
+                    }
+                ];
+            };
+        };
         Views: {
             [_ in never]: never
         }
