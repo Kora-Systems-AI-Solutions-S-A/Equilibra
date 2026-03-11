@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUIStore } from '@/store/ui.store';
 import { useInvestmentsStore } from '@/store/investments.store';
+import { useNotificationStore } from '@/store/notification.store';
 import { ModalBase } from '@/shared/ui/ModalBase';
 import { Button } from '@/shared/ui/Button';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
@@ -20,6 +21,7 @@ type InvestmentFormValues = z.infer<typeof investmentSchema>;
 export const CreateInvestmentModal = () => {
   const { isCreateInvestmentModalOpen, closeCreateInvestmentModal } = useUIStore();
   const { createInvestmentPlan } = useInvestmentsStore();
+  const { showNotification } = useNotificationStore();
 
   const {
     register,
@@ -40,6 +42,7 @@ export const CreateInvestmentModal = () => {
 
   const onSubmit = async (data: InvestmentFormValues) => {
     await createInvestmentPlan(data);
+    showNotification('Investimento criado com sucesso!', 'success');
     closeCreateInvestmentModal();
     reset();
   };

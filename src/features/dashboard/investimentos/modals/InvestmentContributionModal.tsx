@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUIStore } from '@/store/ui.store';
 import { useInvestmentsStore } from '@/store/investments.store';
+import { useNotificationStore } from '@/store/notification.store';
 import { ModalBase } from '@/shared/ui/ModalBase';
 import { Button } from '@/shared/ui/Button';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
@@ -19,6 +20,7 @@ type ContributionFormValues = z.infer<typeof contributionSchema>;
 export const InvestmentContributionModal = () => {
   const { investmentContributionModal, closeInvestmentContributionModal } = useUIStore();
   const { investments, addContribution } = useInvestmentsStore();
+  const { showNotification } = useNotificationStore();
 
   const [lastPlanId, setLastPlanId] = React.useState<string | null>(null);
 
@@ -60,6 +62,7 @@ export const InvestmentContributionModal = () => {
   const onSubmit = async (data: ContributionFormValues) => {
     if (investmentContributionModal.planId) {
       await addContribution(investmentContributionModal.planId, data.amount, data.date, data.note);
+      showNotification('Reforço registrado com sucesso!', 'success');
       closeInvestmentContributionModal();
     }
   };

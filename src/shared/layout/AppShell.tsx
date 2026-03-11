@@ -16,11 +16,14 @@ import { MonthlyRecordType, MonthlyRecordStatus } from '@/models/monthlyRecord.m
 import { motion } from 'motion/react';
 import { ModalExpandedCard } from '@/features/dashboard/components/ModalExpandedCard';
 import { InvestmentContributionModal, CreateInvestmentModal } from '@/features/dashboard/investimentos';
+import { useInvestmentsStore } from '@/store/investments.store';
+import { useNotificationStore } from '@/store/notification.store';
 import { AppFooter } from './AppFooter';
 import { formatCurrency, cn } from '@/lib/utils';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
 
 import { getCurrentMonthYear, addMonthsToMonthYear, getMonthsDifference, getMonthsBetween } from '@/lib/date';
+import { NotificationContainer } from '@/shared/ui/NotificationContainer';
 
 const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
@@ -47,6 +50,7 @@ export const AppShell = () => {
     sidebarCollapsed,
     registerModalContext
   } = useUIStore();
+  const { showNotification } = useNotificationStore();
 
   const [isMobile, setIsMobile] = useState(false);
   const [simulation, setSimulation] = useState<{ installments: number; start: string; end: string } | null>(null);
@@ -168,6 +172,7 @@ export const AppShell = () => {
           status: data.status as MonthlyRecordStatus,
           observations: data.observations,
         });
+        showNotification('Movimentação atualizada com sucesso!', 'success');
         closeRegisterModal();
         setSelectedRecord(undefined);
       } else {
@@ -182,6 +187,8 @@ export const AppShell = () => {
           reference_month: selectedMonth,
           observations: data.observations,
         });
+
+        showNotification('Movimentação registrada com sucesso!', 'success');
 
         // If coming from monthlySummary context, don't close, just reset
         if (registerModalContext === 'monthlySummary') {
@@ -228,6 +235,7 @@ export const AppShell = () => {
         start_date: start,
         total_installments: installments,
       });
+      showNotification('Plano de quitação criado com sucesso!', 'success');
       closeAddPlanModal();
       planForm.reset();
       setSimulation(null);
@@ -259,6 +267,7 @@ export const AppShell = () => {
   const handleConfirmLatePayments = async () => {
     if (!latePaymentData) return;
     await registerInstallmentPayment(latePaymentData.planId, selectedLateMonths.length);
+    showNotification('Pagamentos registrados com sucesso!', 'success');
     setLatePaymentData(null);
     setSelectedLateMonths([]);
   };
@@ -568,6 +577,7 @@ export const AppShell = () => {
       </DrawerBase>
       <InvestmentContributionModal />
       <CreateInvestmentModal />
+      <NotificationContainer />
     </div>
   );
 };
