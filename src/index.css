@@ -55,14 +55,19 @@
     @apply bg-primary text-[#111111] font-bold transition-all duration-200 ease-in-out hover:bg-primary-hover active:bg-primary-active active:scale-[0.98] shadow-md hover:shadow-lg;
   }
 
-  /* Autofill styling to match dark theme */
+  /* Estilização de Autofill para manter o tema dark */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     -webkit-text-fill-color: white !important;
-    -webkit-box-shadow: 0 0 0px 1000px #242624 inset !important;
+    -webkit-box-shadow: 0 0 0px 1000px #121412 inset !important;
     transition: background-color 5000s ease-in-out 0s;
+    caret-color: white;
+  }
+
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: white !important;
+    -webkit-box-shadow: 0 0 0px 1000px #1a1d1c inset !important;
     caret-color: white;
   }
 

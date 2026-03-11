@@ -5,25 +5,28 @@ import { InvestmentsCard } from '@/features/dashboard/investimentos';
 import { useInvestmentsStore } from '@/store/investments.store';
 import { useDebtPlansStore } from '@/store/debtPlans.store';
 import { useMonthlyRecordsStore } from '@/store/monthlyRecords.store';
+import { useAuthStore } from '@/store/auth.store';
 import { useUIStore } from '@/store/ui.store';
 import { useEffect } from 'react';
 
 export const DashboardPage = () => {
   const { fetchInvestmentPlans } = useInvestmentsStore();
   const { fetchDebtPlans } = useDebtPlansStore();
-  const { fetchMonthlyRecords, fetchAllRecords } = useMonthlyRecordsStore();
+  const { fetchAllRecords } = useMonthlyRecordsStore();
   const { dashboardFilters, setPageTransitionLoading } = useUIStore();
+  const userId = useAuthStore(state => state.user?.id);
 
   useEffect(() => {
+    if (!userId) return;
+
     Promise.all([
       fetchDebtPlans(),
-      fetchMonthlyRecords(),
       fetchAllRecords(),
       fetchInvestmentPlans()
     ]).finally(() => {
       setPageTransitionLoading(false);
     });
-  }, [fetchDebtPlans, fetchMonthlyRecords, fetchAllRecords, fetchInvestmentPlans, setPageTransitionLoading]);
+  }, [fetchDebtPlans, fetchAllRecords, fetchInvestmentPlans, setPageTransitionLoading, userId]);
 
   const showIncome = dashboardFilters.types.includes('income');
   const showExpense = dashboardFilters.types.includes('expense');
@@ -38,7 +41,7 @@ export const DashboardPage = () => {
             {showIncome && <IncomeCard />}
           </div>
           <MonthlySummaryCard />
-          
+
           <InvestmentsCard />
         </div>
       </div>

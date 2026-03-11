@@ -207,6 +207,8 @@ export const AppShell = () => {
       }
     } catch (error) {
       console.error('Failed to save record:', error);
+      const message = error instanceof Error ? error.message : 'Erro ao salvar movimentação. Tente novamente.';
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   };
 

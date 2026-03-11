@@ -27,7 +27,7 @@ export const InvestmentsCard: React.FC = () => {
           <h2 className="text-lg font-semibold text-slate-900">Planos de Investimento</h2>
           <p className="text-sm text-slate-500">Acompanhe e reforce seus objetivos financeiros.</p>
         </div>
-        <button 
+        <button
           onClick={handleExpandInvestment}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
@@ -35,33 +35,40 @@ export const InvestmentsCard: React.FC = () => {
         </button>
       </div>
       <div className="px-6 md:px-8 flex flex-col gap-4 flex-1">
-        {investments.map((item) => {
-          const Icon = iconMap[item.icone] || Globe;
-          return (
-            <div key={item.id} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 gap-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 ${item.cor} rounded-xl flex items-center justify-center`}>
-                  <Icon size={24} />
+        {investments.length > 0 ? (
+          investments.map((item) => {
+            const Icon = iconMap[item.icone] || Globe;
+            return (
+              <div key={item.id} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 ${item.cor} rounded-xl flex items-center justify-center`}>
+                    <Icon size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800">{item.nome}</h4>
+                    <p className="text-xs text-slate-500 font-medium uppercase tracking-tight">{formatCurrency(item.valorAtual)}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-slate-800">{item.nome}</h4>
-                  <p className="text-xs text-slate-500 font-medium uppercase tracking-tight">{formatCurrency(item.valorAtual)}</p>
-                </div>
+                <Button
+                  size="sm"
+                  onClick={() => handleReinforceInvestment(item.id)}
+                >
+                  Reforçar
+                </Button>
               </div>
-              <Button 
-                size="sm"
-                onClick={() => handleReinforceInvestment(item.id)}
-              >
-                Reforçar
-              </Button>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+            <p className="text-sm font-medium text-slate-400">Nenhum investimento registrado.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Comece a investir clicando no botão abaixo.</p>
+          </div>
+        )}
       </div>
 
       <div className="absolute bottom-5 right-4">
         <Tooltip content="Criar novo investimento">
-          <button 
+          <button
             onClick={handleCreateInvestment}
             className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
           >

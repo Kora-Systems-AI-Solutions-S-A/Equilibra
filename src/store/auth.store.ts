@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { authService } from '@/services/auth.service';
 import { User, Session } from '@/models/user.model';
 import { supabase } from '@/core/supabase/client';
+import { useMonthlyRecordsStore } from './monthlyRecords.store';
+import { useDebtPlansStore } from './debtPlans.store';
+import { useInvestmentsStore } from './investments.store';
 
 interface AuthState {
   user: User | null;
@@ -140,6 +143,11 @@ export const initializeAuthListener = () => {
         isLoading: false,
       });
     } else {
+      // Quando a sessão é encerrada, resetamos todas as stores de domínio
+      useMonthlyRecordsStore.getState().reset();
+      useDebtPlansStore.getState().reset();
+      useInvestmentsStore.getState().reset();
+
       useAuthStore.setState({
         session: null,
         user: null,

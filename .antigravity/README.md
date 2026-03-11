@@ -1,282 +1,309 @@
 # Antigravity AI Layer
 
-Este diretório define a **camada de engenharia assistida por IA** utilizada no projeto.
+This directory defines the **AI-assisted engineering layer** used in the project.
 
-Ele contém **Agents** e **Skills** que orientam ferramentas de IA (como Antigravity, Gemini ou Copilot) a gerar código consistente com a arquitetura do sistema.
+It contains **Agents** and **Skills** that guide AI tools (such as Antigravity, Gemini or Copilot) to generate code aligned with the system architecture.
 
-A estrutura separa:
+The structure separates:
 
-- regras **genéricas reutilizáveis**
-- regras **específicas do projeto**
+- **generic reusable rules**
+- **project-specific rules**
 
-Isso permite reutilizar esta camada em múltiplos projetos mantendo **consistência arquitetural, previsibilidade e qualidade de código**.
+This allows the layer to be reused across multiple projects while maintaining **architectural consistency, predictable behaviour, and high code quality**.
 
 ---
 
-# Estrutura
-
+# Structure
 
 .antigravity
 │
-├─ agents
-│ Agents genéricos reutilizáveis entre projetos
+├─ agents  
+│  Generic engineering roles reusable across projects  
 │
-├─ skills
-│ Capacidades técnicas reutilizáveis utilizadas pelos agents
+├─ skills  
+│  Reusable technical capabilities used by agents  
 │
-├─ projects
-│ Configurações específicas de cada projeto
+├─ projects  
+│  Project-specific configurations  
 │
-└─ README.md
-Documentação da camada de automação
-
+└─ README.md  
+   Documentation for the AI automation layer  
 
 ---
 
 # Agents
 
-Agents representam **papéis especializados de engenharia de software**.
+Agents represent **specialized software engineering roles**.
 
-Eles orientam ferramentas de IA a decidir **como implementar mudanças**, respeitando a arquitetura existente.
+They guide AI tools on **how changes should be implemented**, ensuring the existing architecture is respected.
 
-Agents **não implementam regras isoladamente** — eles utilizam as *skills* disponíveis para avaliar cenários e propor soluções.
-
-Principais agents disponíveis:
+Agents **do not enforce rules by themselves** — they rely on **skills** to evaluate scenarios and propose safe implementations.
 
 ---
 
 ## architect-agent
 
-Responsável por decisões estruturais.
+Responsible for **architectural decisions**.
 
-Analisa:
+Analyzes:
 
-- onde novas funcionalidades devem ser implementadas
-- em qual camada da arquitetura o código deve viver
-- consistência estrutural do projeto
-- acoplamento entre módulos
-- separação de responsabilidades
+- where new functionality should live
+- which architectural layer should contain the code
+- structural consistency of the project
+- coupling between modules
+- separation of responsibilities
 
-Evita alterações arquiteturais desnecessárias.
+Avoids unnecessary architectural changes.
 
 ---
 
 ## frontend-agent
 
-Especializado na camada de interface.
+Specialized in the **UI layer**.
 
-Responsável por:
+Responsible for:
 
-- implementação de UI
-- organização de componentes
-- composição segura de interface
-- respeito ao design system
-- consistência visual
-- integração com state management
+- UI implementation
+- component organization
+- safe component composition
+- respecting the design system
+- visual consistency
+- integration with state management
 
 ---
 
 ## data-agent
 
-Especializado em **fluxo de dados e persistência**.
+Specialized in **data flow and persistence**.
 
-Responsável por:
+Responsible for:
 
-- integração com APIs
-- modelagem de dados
-- separação entre UI e camada de dados
-- consistência do fluxo de dados
-- validação de queries e segurança
+- API integration
+- data modeling
+- separation between UI and data layer
+- validating data flow consistency
+- verifying query safety and correctness
 
 ---
 
 ## refactor-agent
 
-Responsável por **melhoria estrutural de código existente**.
+Responsible for **improving existing code structure**.
 
-Atua em:
+Focuses on:
 
-- remoção de duplicações
-- simplificação de lógica
-- melhoria de legibilidade
-- reorganização segura de código
+- removing duplication
+- simplifying logic
+- improving readability
+- safely reorganizing code
 
-Sem alterar comportamento funcional.
+Without changing functional behaviour.
 
 ---
 
 ## ux-reviewer-agent
 
-Responsável por avaliar **qualidade da experiência do usuário**.
+Responsible for **user experience evaluation**.
 
-Analisa:
+Analyzes:
 
-- consistência visual
-- hierarquia de informação
-- responsividade
-- animações e transições
-- clareza de interação
+- visual consistency
+- information hierarchy
+- responsiveness
+- animations and transitions
+- interaction clarity
 
 ---
 
 # Skills
 
-Skills representam **capacidades técnicas reutilizáveis**.
+Skills represent **reusable technical capabilities**.
 
-Agents utilizam skills para aplicar regras específicas durante análises ou implementações.
+Agents use them to apply **specific technical rules** during analysis or implementation.
 
-Cada skill representa um **conjunto de critérios técnicos** que podem ser utilizados em diferentes cenários.
+Each skill defines **evaluation criteria** that can be reused across different scenarios.
 
 ---
 
 ## architecture-placement
 
-Define a camada correta para implementação de novas funcionalidades.
+Defines the correct architectural layer for new functionality.
 
-Evita:
+Prevents:
 
-- lógica em camadas incorretas
-- mistura entre UI e regras de negócio
-- acoplamento indevido entre módulos
+- business logic inside UI
+- incorrect layering
+- tight coupling between modules
 
 ---
 
 ## safe-ui-composition
 
-Define boas práticas para composição de componentes UI.
+Defines best practices for composing UI components.
 
-Garante:
+Ensures:
 
-- componentes reutilizáveis
-- separação entre layout e lógica
-- estrutura previsível de componentes
+- reusable components
+- separation between layout and logic
+- predictable component structure
 
 ---
 
 ## data-flow-segregation
 
-Define a separação correta entre:
+Defines the correct separation between:
 
 - UI
 - state management
 - services
-- camada de dados
+- data layer
 
-Evita mistura de responsabilidades entre camadas.
+Prevents mixing responsibilities across layers.
 
 ---
 
 ## responsive-review
 
-Avalia comportamento responsivo da aplicação em diferentes tamanhos de ecrã.
+Evaluates how the application behaves across different screen sizes.
 
-Garante consistência visual e legibilidade.
+Ensures visual consistency and readability.
 
 ---
 
 ## motion-review
 
-Analisa animações e transições da interface.
+Analyzes UI animations and transitions.
 
-Verifica:
+Checks:
 
-- consistência de movimento
-- impacto de performance
-- qualidade da experiência visual
+- motion consistency
+- performance impact
+- visual experience quality
 
 ---
 
 ## security-boundary-review
 
-Revisa limites de segurança da aplicação.
+Reviews application security boundaries.
 
-Evita:
+Prevents:
 
-- exposição de dados sensíveis
-- queries inseguras
-- confiança indevida em dados externos
+- sensitive data exposure
+- unsafe queries
+- trusting unvalidated external data
+
+---
+
+## load-and-security-review
+
+Performs a **combined security and performance audit**.
+
+Focuses on:
+
+- excessive API or database requests
+- duplicate queries
+- race conditions
+- performance bottlenecks
+- incorrect request patterns
+- weak security boundaries
+
+Helps detect issues that could impact **scalability or stability**.
+
+---
+
+## multi-user-isolation-review
+
+Audits **multi-user safety and tenant isolation**.
+
+Ensures:
+
+- user data cannot leak between sessions
+- stores do not retain data after logout
+- services properly scope queries by user
+- session transitions are safe
+- multiple browser tabs remain consistent
+
+This skill is critical for **multi-tenant SaaS applications**.
 
 ---
 
 ## import-naming-consistency
 
-Garante consistência de:
+Ensures consistency of:
 
-- alias de imports
+- import aliases
 - naming conventions
-- organização de módulos
+- module organization
 
-Ajuda a manter o código previsível e fácil de navegar.
+Helps keep the codebase predictable and easy to navigate.
 
 ---
 
 # Projects
 
-Cada projeto pode definir **configurações específicas**.
+Each project can define **project-specific configuration**.
 
-## Estrutura típica
+Typical structure:
 
+projects/  
+  equilibra/
 
-projects/
-equilibra/
+Inside this folder live:
 
+- project context
+- architectural rules
+- project-specific agents
+- domain-specific skills
 
-Dentro dessa pasta ficam:
-
-- contexto do projeto
-- regras arquiteturais específicas
-- agents especializados
-- skills específicas do domínio
-
-Essa separação permite que o sistema seja reutilizado em múltiplos projetos.
+This separation allows the AI layer to be reused across different projects.
 
 ---
 
 # Agent Responsibilities
 
-Agents devem:
+Agents must:
 
-- respeitar a arquitetura existente
-- preferir mudanças incrementais
-- evitar alterações estruturais desnecessárias
-- manter separação clara de responsabilidades
+- respect the existing architecture
+- prefer incremental changes
+- avoid unnecessary structural modifications
+- maintain clear separation of responsibilities
 
-Agents **não devem alterar a arquitetura do projeto sem pedido explícito**.
+Agents **must not alter the project architecture unless explicitly requested**.
 
-Mudanças estruturais devem ocorrer apenas quando solicitadas diretamente.
+Structural changes should only occur when directly instructed.
 
 ---
 
 # AI Loading Order
 
-Quando uma ferramenta de IA estiver a trabalhar neste repositório, o processo recomendado é:
+When an AI tool works within this repository, the recommended loading sequence is:
 
-1. Ler este README
-2. Carregar **agents genéricos**
-3. Carregar **skills relevantes**
-4. Identificar o projeto ativo dentro de `/projects`
-5. Carregar os arquivos do projeto:
+1. Read this README
+2. Load **generic agents**
+3. Load **relevant skills**
+4. Identify the active project inside `/projects`
+5. Load the project files:
    - `project-context.md`
    - `project-rules.md`
    - `brain-map.md`
-6. Aplicar as regras antes de gerar código
+6. Apply these rules before generating code
 
-Essa ordem garante que a IA compreenda primeiro:
+This ensures the AI understands first:
 
-1. papéis de engenharia
-2. capacidades técnicas
-3. contexto específico do projeto
+1. engineering roles  
+2. technical capabilities  
+3. project-specific context  
 
 ---
 
-# Filosofia
+# Philosophy
 
-Esta camada existe para garantir:
+This layer exists to ensure:
 
-- arquitetura consistente
-- código previsível
-- separação clara de responsabilidades
-- facilidade de evolução do projeto
-- colaboração segura entre humanos e IA
+- consistent architecture
+- predictable code generation
+- clear separation of responsibilities
+- easier project evolution
+- safe collaboration between humans and AI
 
-O objetivo é que ferramentas de IA **atuem como engenheiros auxiliares**, respeitando o design do sistema em vez de introduzir soluções arbitrárias.
+The goal is for AI tools to behave as **engineering assistants**, respecting the system design rather than introducing arbitrary solutions.

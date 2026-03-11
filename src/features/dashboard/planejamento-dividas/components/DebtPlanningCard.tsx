@@ -26,38 +26,45 @@ export const DebtPlanningCard = () => {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto pr-2 max-h-[160px] scrollbar-hide">
-        <div className="flex flex-col gap-6">
-          {sortedPlans.slice(0, 2).map((plan) => {
-            const progress = calculateProgressPercent(plan);
-            return (
-              <div key={plan.id} className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-semibold text-slate-800">{plan.nome}</p>
-                    <span className={cn(
-                      "text-[9px] font-bold uppercase w-fit",
-                      plan.prioridade === 'Alta' ? "text-danger" :
-                        plan.prioridade === 'Média' ? "text-warning" :
-                          "text-info"
-                    )}>
-                      {plan.prioridade}
-                    </span>
+        {sortedPlans.length > 0 ? (
+          <div className="flex flex-col gap-6">
+            {sortedPlans.slice(0, 2).map((plan) => {
+              const progress = calculateProgressPercent(plan);
+              return (
+                <div key={plan.id} className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-sm font-semibold text-slate-800">{plan.nome}</p>
+                      <span className={cn(
+                        "text-[9px] font-bold uppercase w-fit",
+                        plan.prioridade === 'Alta' ? "text-danger" :
+                          plan.prioridade === 'Média' ? "text-warning" :
+                            "text-info"
+                      )}>
+                        {plan.prioridade}
+                      </span>
+                    </div>
+                    <Button variant="primary" size="sm" onClick={() => openPlanDrawer(plan.id, 'dashboard')}>
+                      Ver plano
+                    </Button>
                   </div>
-                  <Button variant="primary" size="sm" onClick={() => openPlanDrawer(plan.id, 'dashboard')}>
-                    Ver plano
-                  </Button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 flex rounded-full overflow-hidden bg-slate-100">
-                    <div className="h-full bg-success" style={{ width: `${progress}%` }}></div>
-                    <div className="h-full bg-danger" style={{ width: `${100 - progress}%` }}></div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 flex rounded-full overflow-hidden bg-slate-100">
+                      <div className="h-full bg-success" style={{ width: `${progress}%` }}></div>
+                      <div className="h-full bg-danger" style={{ width: `${100 - progress}%` }}></div>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">{progress}%</span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400">{progress}%</span>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-center px-4 py-8">
+            <p className="text-sm font-medium text-slate-400">Nenhum plano ativo.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Clique no botão + para começar seu plano de quitação.</p>
+          </div>
+        )}
       </div>
 
       <div className="absolute bottom-5 right-4">

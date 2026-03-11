@@ -17,6 +17,7 @@ interface DebtPlansState {
   createDebtPlan: (payload: CreateDebtPlanRequest) => Promise<void>;
   updatePlan: (id: string, updates: Partial<DebtPlan>) => Promise<void>;
   registerInstallmentPayment: (id: string, quantity?: number) => Promise<void>;
+  reset: () => void;
 }
 
 export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
@@ -115,4 +116,11 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
       throw error;
     }
   },
+
+  reset: () => set({
+    items: [],
+    selected: undefined,
+    isLoading: false,
+    error: undefined
+  }),
 }));

@@ -12,11 +12,14 @@ export const InvestmentPlansService = {
       .order('created_at', { ascending: false });
 
     if (plansError) throw new Error(plansError.message);
-    if (!plansData) return [];
+    if (!plansData || plansData.length === 0) return [];
+
+    const planIds = plansData.map(p => p.id);
 
     const { data: contribData, error: contribError } = await supabase
       .from('investment_contributions')
-      .select('investment_id, amount');
+      .select('investment_id, amount')
+      .in('investment_id', planIds);
 
     if (contribError) throw new Error(contribError.message);
 

@@ -23,6 +23,7 @@ interface MonthlyRecordsState {
   cancelRecord: (id: string) => Promise<void>;
   setSelectedMonth: (month: string) => void;
   setSelectedRecord: (record?: MonthlyRecord) => void;
+  reset: () => void;
 }
 
 export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => ({
@@ -56,11 +57,17 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     set({ isLoading: true, error: undefined });
     try {
       const allRecords = await MonthlyRecordsService.listMonthlyRecords(userId);
-      set({ allRecords, isLoading: false });
+      const selectedMonth = get().selectedMonth;
+
+      // Filtra os itens do mês selecionado a partir do histórico completo recém-carregado
+      const items = allRecords.filter(record => record.mesReferencia === selectedMonth);
+
+      set({ allRecords, items, isLoading: false });
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : 'Erro ao carregar histórico';
       set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -169,4 +176,13 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   },
 
   setSelectedRecord: (record) => set({ selectedRecord: record }),
+
+  reset: () => set({
+    items: [],
+    allRecords: [],
+    isLoading: false,
+    error: undefined,
+    selectedMonth: getCurrentMonthYear(),
+    selectedRecord: undefined
+  }),
 }));

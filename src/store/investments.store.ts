@@ -15,6 +15,7 @@ interface InvestmentsState {
   fetchInvestmentPlanById: (id: string) => Promise<void>;
   createInvestmentPlan: (payload: CreateInvestmentPlanRequest) => Promise<void>;
   addContribution: (planId: string, amount: number, date: string, note?: string) => Promise<void>;
+  reset: () => void;
 }
 
 export const useInvestmentsStore = create<InvestmentsState>((set) => ({
@@ -96,5 +97,12 @@ export const useInvestmentsStore = create<InvestmentsState>((set) => ({
       set({ error: message, isLoading: false });
       useNotificationStore.getState().showNotification(message, 'error');
     }
-  }
+  },
+
+  reset: () => set({
+    investments: [],
+    isLoading: false,
+    error: undefined,
+    selectedInvestment: undefined
+  }),
 }));
