@@ -134,12 +134,14 @@ export const AppShell = () => {
   const watchType = transactionForm.watch('type');
 
   useEffect(() => {
-    // Only auto-set status/category if NOT editing or if type changed manually
-    if (!selectedRecord) {
-      if (watchType === 'Receita') {
-        transactionForm.setValue('status', 'Recebido');
-        transactionForm.setValue('category', undefined);
-      } else {
+    // Limpar status/categoria quando o tipo muda
+    if (watchType === 'Receita') {
+      transactionForm.setValue('status', 'Recebido');
+      transactionForm.setValue('category', undefined);
+    } else {
+      // Valor padrão para Despesa, apenas se não estivermos editando um registro existente
+      // Se estivermos editando, preservamos o que veio do banco (já mapeado no reset acima)
+      if (!selectedRecord) {
         transactionForm.setValue('status', 'Pendente');
         transactionForm.setValue('category', 'Habitação');
         transactionForm.setValue('origin', undefined);
@@ -158,27 +160,27 @@ export const AppShell = () => {
     try {
       if (selectedRecord) {
         await updateMonthlyRecord(selectedRecord.id, {
-          tipo: data.type as MonthlyRecordType,
-          descricao: data.description,
-          origem: data.origin,
-          categoria: data.category,
-          valor: data.value,
+          type: data.type as MonthlyRecordType,
+          description: data.description,
+          origin: data.origin,
+          category: data.category,
+          amount: data.value,
           status: data.status as MonthlyRecordStatus,
-          observacoes: data.observations,
+          observations: data.observations,
         });
         closeRegisterModal();
         setSelectedRecord(undefined);
       } else {
         await createMonthlyRecord({
-          tipo: data.type as MonthlyRecordType,
-          descricao: data.description,
-          origem: data.origin,
-          categoria: data.category,
-          valor: data.value,
+          type: data.type as MonthlyRecordType,
+          description: data.description,
+          origin: data.origin,
+          category: data.category,
+          amount: data.value,
           status: data.status as MonthlyRecordStatus,
-          data: new Date().toISOString(),
-          mesReferencia: selectedMonth,
-          observacoes: data.observations,
+          occurred_at: new Date().toISOString(),
+          reference_month: selectedMonth,
+          observations: data.observations,
         });
 
         // If coming from monthlySummary context, don't close, just reset
@@ -217,12 +219,14 @@ export const AppShell = () => {
 
     try {
       await createDebtPlan({
-        nome: data.name,
-        valorTotal: data.totalValue,
-        valorMensal: data.monthlyPayment,
-        prioridade: data.priority as DebtPriority,
-        dataInicio: start,
-        parcelasTotal: installments,
+        name: data.name,
+        total_amount: data.totalValue,
+        remaining_amount: data.totalValue,
+        monthly_payment: data.monthlyPayment,
+        interest_rate: 0,
+        priority: data.priority as DebtPriority,
+        start_date: start,
+        total_installments: installments,
       });
       closeAddPlanModal();
       planForm.reset();

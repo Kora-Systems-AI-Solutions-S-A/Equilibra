@@ -3,23 +3,28 @@ import { DebtPriority } from '@/models/debtPlan.model';
 export interface DebtPlanDto {
   id: string;
   user_id: string;
-  nome: string;
-  valor_total: number;
-  valor_mensal: number;
-  prioridade: DebtPriority;
-  data_inicio: string;
-  data_termino?: string;
-  parcelas_total: number;
-  parcelas_pagas: number;
+  name: string;
+  total_amount: number;
+  remaining_amount: number;
+  monthly_payment: number;
+  interest_rate: number;
+  priority: string;
+  start_date: string;
+  end_date?: string | null;
+  total_installments: number;
+  paid_installments: number;
 }
 
 export interface CreateDebtPlanRequest {
-  nome: string;
-  valorTotal: number;
-  valorMensal: number;
-  prioridade: DebtPriority;
-  dataInicio: string;
-  parcelasTotal: number;
+  name: string;
+  total_amount: number;
+  remaining_amount: number;
+  monthly_payment: number;
+  interest_rate?: number;
+  priority: DebtPriority;
+  start_date: string;
+  end_date?: string;
+  total_installments: number;
 }
 
 export interface RegisterPaymentRequest {

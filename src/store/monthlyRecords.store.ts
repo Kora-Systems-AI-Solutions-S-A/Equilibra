@@ -3,6 +3,7 @@ import { MonthlyRecord, MonthlyRecordStatus } from '@/models/monthlyRecord.model
 import { MonthlyRecordsService } from '@/services/monthlyRecords.service';
 import { CreateMonthlyRecordRequest, UpdateMonthlyRecordRequest } from '@/mappers/monthlyRecords.dto';
 import { getCurrentMonthYear } from '@/lib/date';
+import { useAuthStore } from '@/store/auth.store';
 
 interface MonthlyRecordsState {
   items: MonthlyRecord[];
@@ -32,22 +33,28 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   selectedRecord: undefined,
 
   fetchMonthlyRecords: async (monthRef) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     const ref = monthRef || get().selectedMonth;
     set({ isLoading: true, error: undefined });
     try {
-      const items = await MonthlyRecordsService.listMonthlyRecords(ref);
+      const items = await MonthlyRecordsService.listMonthlyRecords(userId, ref);
       set({ items, isLoading: false });
     } catch (error) {
-      set({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Erro ao carregar registros' 
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao carregar registros'
       });
     }
   },
 
   fetchAllRecords: async () => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     try {
-      const allRecords = await MonthlyRecordsService.listMonthlyRecords();
+      const allRecords = await MonthlyRecordsService.listMonthlyRecords(userId);
       set({ allRecords });
     } catch (error) {
       console.error(error);
@@ -55,9 +62,12 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   },
 
   createMonthlyRecord: async (payload) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Utilizador não autenticado');
+
     set({ isLoading: true });
     try {
-      const newItem = await MonthlyRecordsService.createMonthlyRecord(payload);
+      const newItem = await MonthlyRecordsService.createMonthlyRecord(userId, payload);
       // Update allRecords
       set((state) => ({ allRecords: [newItem, ...state.allRecords] }));
       // Only add to list if it matches selected month
@@ -72,9 +82,12 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   },
 
   updateMonthlyRecord: async (id, payload) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Utilizador não autenticado');
+
     set({ isLoading: true });
     try {
-      const updated = await MonthlyRecordsService.updateMonthlyRecord(id, payload);
+      const updated = await MonthlyRecordsService.updateMonthlyRecord(userId, id, payload);
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
         allRecords: state.allRecords.map(item => item.id === id ? updated : item),
@@ -87,8 +100,11 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   },
 
   markAsPaid: async (id) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     try {
-      const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(id, 'Pago');
+      const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(userId, id, 'Pago');
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
         allRecords: state.allRecords.map(item => item.id === id ? updated : item)
@@ -99,8 +115,11 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   },
 
   markAsReceived: async (id) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     try {
-      const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(id, 'Recebido');
+      const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(userId, id, 'Recebido');
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
         allRecords: state.allRecords.map(item => item.id === id ? updated : item)
@@ -111,8 +130,11 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
   },
 
   cancelRecord: async (id) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     try {
-      const updated = await MonthlyRecordsService.cancelMonthlyRecord(id);
+      const updated = await MonthlyRecordsService.cancelMonthlyRecord(userId, id);
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
         allRecords: state.allRecords.map(item => item.id === id ? updated : item)

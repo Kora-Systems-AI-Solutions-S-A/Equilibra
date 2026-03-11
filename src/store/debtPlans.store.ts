@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { DebtPlan } from '@/models/debtPlan.model';
 import { DebtPlansService } from '@/services/debtPlans.service';
 import { CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
+import { useAuthStore } from '@/store/auth.store';
 
 interface DebtPlansState {
   items: DebtPlan[];
@@ -23,66 +24,90 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
   error: undefined,
 
   fetchDebtPlans: async () => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     set({ isLoading: true, error: undefined });
     try {
-      const items = await DebtPlansService.listDebtPlans();
+      const items = await DebtPlansService.listDebtPlans(userId);
       set({ items, isLoading: false });
     } catch (error) {
       console.error('Failed to fetch debt plans:', error);
-      set({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Erro ao carregar planos' 
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao carregar planos'
       });
-      // Fallback to empty state as requested
       set({ items: [] });
     }
   },
 
   fetchDebtPlanDetails: async (id: string) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
     set({ isLoading: true, error: undefined });
     try {
-      const selected = await DebtPlansService.getDebtPlanById(id);
+      const selected = await DebtPlansService.getDebtPlanById(userId, id);
       set({ selected, isLoading: false });
     } catch (error) {
       console.error('Failed to fetch debt plan details:', error);
-      set({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Erro ao carregar detalhes' 
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao carregar detalhes'
       });
     }
   },
 
   createDebtPlan: async (payload: CreateDebtPlanRequest) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Utilizador não autenticado');
+
     set({ isLoading: true, error: undefined });
     try {
-      const newPlan = await DebtPlansService.createDebtPlan(payload);
-      set((state) => ({ 
+      const newPlan = await DebtPlansService.createDebtPlan(userId, payload);
+      set((state) => ({
         items: [newPlan, ...state.items],
-        isLoading: false 
+        isLoading: false
       }));
     } catch (error) {
       console.error('Failed to create debt plan:', error);
-      set({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Erro ao criar plano' 
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao criar plano'
       });
       throw error;
     }
   },
 
   updatePlan: async (id: string, updates: Partial<DebtPlan>) => {
-    // This is a mock for now as there's no specific update endpoint mentioned in the prompt
-    // but we need it for the UI logic (readjust plan)
-    set((state) => ({
-      items: state.items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
-      selected: state.selected?.id === id ? { ...state.selected, ...updates } : state.selected,
-    }));
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Utilizador não autenticado');
+
+    set({ isLoading: true, error: undefined });
+    try {
+      const updatedPlan = await DebtPlansService.updateDebtPlan(userId, id, updates);
+      set((state) => ({
+        items: state.items.map((item) => (item.id === id ? updatedPlan : item)),
+        selected: state.selected?.id === id ? updatedPlan : state.selected,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Failed to update plan:', error);
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao atualizar plano'
+      });
+      throw error;
+    }
   },
 
   registerInstallmentPayment: async (id: string, quantity: number = 1) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Utilizador não autenticado');
+
     set({ isLoading: true, error: undefined });
     try {
-      const updatedPlan = await DebtPlansService.registerInstallmentPayment(id, quantity);
+      const updatedPlan = await DebtPlansService.registerInstallmentPayment(userId, id, quantity);
       set((state) => ({
         items: state.items.map((item) => (item.id === id ? updatedPlan : item)),
         selected: state.selected?.id === id ? updatedPlan : state.selected,
@@ -90,9 +115,9 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to register payment:', error);
-      set({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Erro ao registrar pagamento' 
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao registrar pagamento'
       });
       throw error;
     }

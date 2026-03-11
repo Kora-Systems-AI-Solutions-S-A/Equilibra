@@ -1,26 +1,30 @@
-import { DebtPlan } from '@/models/debtPlan.model';
+import { DebtPlan, DebtPriority } from '@/models/debtPlan.model';
 import { DebtPlanDto, CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
 
 export const debtPlanMapper = {
   toDomain: (dto: DebtPlanDto): DebtPlan => ({
     id: dto.id,
     userId: dto.user_id,
-    nome: dto.nome,
-    valorTotal: dto.valor_total,
-    valorMensal: dto.valor_mensal,
-    prioridade: dto.prioridade,
-    dataInicio: dto.data_inicio,
-    dataTermino: dto.data_termino,
-    parcelasTotal: dto.parcelas_total,
-    parcelasPagas: dto.parcelas_pagas,
+    nome: dto.name,
+    valorTotal: dto.total_amount,
+    remainingAmount: dto.remaining_amount,
+    valorMensal: dto.monthly_payment,
+    interestRate: dto.interest_rate,
+    prioridade: dto.priority as DebtPriority,
+    dataInicio: dto.start_date,
+    dataTermino: dto.end_date,
+    parcelasTotal: dto.total_installments,
+    parcelasPagas: dto.paid_installments,
   }),
 
   toCreateRequest: (plan: Partial<DebtPlan>): CreateDebtPlanRequest => ({
-    nome: plan.nome || '',
-    valorTotal: plan.valorTotal || 0,
-    valorMensal: plan.valorMensal || 0,
-    prioridade: plan.prioridade || ('' as any),
-    dataInicio: plan.dataInicio || new Date().toISOString(),
-    parcelasTotal: plan.parcelasTotal || 0,
+    name: plan.nome || '',
+    total_amount: plan.valorTotal || 0,
+    remaining_amount: plan.remainingAmount || plan.valorTotal || 0,
+    monthly_payment: plan.valorMensal || 0,
+    interest_rate: plan.interestRate || 0,
+    priority: plan.prioridade || ('' as any),
+    start_date: plan.dataInicio || new Date().toISOString(),
+    total_installments: plan.parcelasTotal || 0,
   }),
 };

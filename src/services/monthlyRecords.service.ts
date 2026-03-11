@@ -1,155 +1,118 @@
 import { MonthlyRecord, MonthlyRecordStatus } from '@/models/monthlyRecord.model';
-import { CreateMonthlyRecordRequest, UpdateMonthlyRecordRequest } from '@/mappers/monthlyRecords.dto';
-import { authService } from '@/services/auth.service';
+import { CreateMonthlyRecordRequest, UpdateMonthlyRecordRequest, MonthlyRecordDto } from '@/mappers/monthlyRecords.dto';
+import { monthlyRecordMapper } from '@/mappers/monthlyRecords.mapper';
+import { supabase } from '@/core/supabase/client';
+import { Database } from '@/core/supabase/database.types';
 
-// TEMP MOCK - remover quando integração com Supabase/API estiver pronta
-let mockRecords: MonthlyRecord[] = [
-  {
-    id: '1',
-    userId: '1',
-    tipo: 'Receita',
-    descricao: 'Salário Mensal',
-    origem: 'Empresa Tech',
-    valor: 4500.00,
-    status: 'Recebido',
-    data: '2023-10-05T00:00:00.000Z',
-    mesReferencia: '10/2023',
-  },
-  {
-    id: '2',
-    userId: '1',
-    tipo: 'Receita',
-    descricao: 'Freelance UI Design',
-    origem: 'Cliente Exterior',
-    valor: 1200.00,
-    status: 'Pendente',
-    data: '2023-10-20T00:00:00.000Z',
-    mesReferencia: '10/2023',
-  },
-  {
-    id: '3',
-    userId: '1',
-    tipo: 'Despesa',
-    descricao: 'Aluguel Residencial',
-    categoria: 'Habitação',
-    valor: 2400.00,
-    status: 'Pago',
-    data: '2023-10-10T00:00:00.000Z',
-    mesReferencia: '10/2023',
-  },
-  {
-    id: '4',
-    userId: '1',
-    tipo: 'Despesa',
-    descricao: 'Supermercado',
-    categoria: 'Alimentação',
-    valor: 850.00,
-    status: 'Pendente',
-    data: '2023-10-15T00:00:00.000Z',
-    mesReferencia: '10/2023',
-  },
-  {
-    id: '5',
-    userId: '1',
-    tipo: 'Despesa',
-    descricao: 'Assinatura Streaming',
-    categoria: 'Lazer',
-    valor: 15.99,
-    status: 'Cancelado',
-    data: '2023-10-01T00:00:00.000Z',
-    mesReferencia: '10/2023',
-  },
-  // Mês Atual (Simulado como Março 2026 baseado no contexto)
-  {
-    id: '6',
-    userId: '1',
-    tipo: 'Receita',
-    descricao: 'Salário Mensal',
-    origem: 'Empresa Tech',
-    valor: 4500.00,
-    status: 'Recebido',
-    data: '2026-03-05T00:00:00.000Z',
-    mesReferencia: '03/2026',
-  },
-  {
-    id: '7',
-    userId: '1',
-    tipo: 'Despesa',
-    descricao: 'Aluguel',
-    categoria: 'Habitação',
-    valor: 2500.00,
-    status: 'Pago',
-    data: '2026-03-10T00:00:00.000Z',
-    mesReferencia: '03/2026',
-  },
-  {
-    id: '8',
-    userId: '1',
-    tipo: 'Despesa',
-    descricao: 'Energia Elétrica',
-    categoria: 'Habitação',
-    valor: 120.00,
-    status: 'Pendente',
-    data: '2026-03-15T00:00:00.000Z',
-    mesReferencia: '03/2026',
-  }
-];
+type MonthlyRecordInsert = Database['public']['Tables']['monthly_records']['Insert'];
+type MonthlyRecordUpdate = Database['public']['Tables']['monthly_records']['Update'];
 
 export const MonthlyRecordsService = {
-  async listMonthlyRecords(monthRef?: string): Promise<MonthlyRecord[]> {
-    const userId = authService.getCurrentUserId();
+  // Lista registros do usuário, opcionalmente filtrados por mês (MM/YYYY)
+  async listMonthlyRecords(userId: string, monthRef?: string): Promise<MonthlyRecord[]> {
     if (!userId) return [];
 
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    let filtered = mockRecords.filter(r => r.userId === userId);
-    
+    let query = supabase
+      .from('monthly_records')
+      .select('*')
+      .eq('user_id', userId)
+      .order('occurred_at', { ascending: false });
+
     if (monthRef) {
-      filtered = filtered.filter(r => r.mesReferencia === monthRef);
+      query = query.eq('reference_month', monthRef);
     }
-    
-    return [...filtered];
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(`Erro ao buscar registros: ${error.message}`);
+    }
+
+    return (data || []).map(row => monthlyRecordMapper.toDomain(row as MonthlyRecordDto));
   },
 
-  async getMonthlyRecordById(id: string): Promise<MonthlyRecord> {
-    const userId = authService.getCurrentUserId();
-    const record = mockRecords.find(r => r.id === id && r.userId === userId);
-    if (!record) throw new Error('Registro não encontrado');
-    return { ...record };
+  // Busca um registro específico pelo ID
+  async getMonthlyRecordById(userId: string, id: string): Promise<MonthlyRecord> {
+    const { data, error } = await supabase
+      .from('monthly_records')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      throw new Error('Registro não encontrado');
+    }
+
+    return monthlyRecordMapper.toDomain(data as MonthlyRecordDto);
   },
 
-  async createMonthlyRecord(payload: CreateMonthlyRecordRequest): Promise<MonthlyRecord> {
-    const userId = authService.getCurrentUserId();
+  // Cria um novo registro
+  async createMonthlyRecord(userId: string, payload: CreateMonthlyRecordRequest): Promise<MonthlyRecord> {
     if (!userId) throw new Error('Utilizador não autenticado');
 
-    const newRecord: MonthlyRecord = {
+    const insertPayload: MonthlyRecordInsert = {
       ...payload,
-      id: Math.random().toString(36).substring(7),
-      userId,
+      user_id: userId,
     };
-    mockRecords = [newRecord, ...mockRecords];
-    return newRecord;
+
+    const { data, error } = await supabase
+      .from('monthly_records')
+      .insert(insertPayload)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Erro ao criar registro: ${error.message}`);
+    }
+
+    return monthlyRecordMapper.toDomain(data as MonthlyRecordDto);
   },
 
-  async updateMonthlyRecord(id: string, payload: UpdateMonthlyRecordRequest): Promise<MonthlyRecord> {
-    const userId = authService.getCurrentUserId();
-    const index = mockRecords.findIndex(r => r.id === id && r.userId === userId);
-    if (index === -1) throw new Error('Registro não encontrado');
-    
-    mockRecords[index] = { ...mockRecords[index], ...payload };
-    return { ...mockRecords[index] };
+  // Atualiza um registro existente
+  async updateMonthlyRecord(userId: string, id: string, payload: UpdateMonthlyRecordRequest): Promise<MonthlyRecord> {
+    const updatePayload: MonthlyRecordUpdate = {
+      ...payload,
+    };
+
+    const { data, error } = await supabase
+      .from('monthly_records')
+      .update(updatePayload)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Erro ao atualizar registro: ${error.message}`);
+    }
+
+    return monthlyRecordMapper.toDomain(data as MonthlyRecordDto);
   },
 
-  async updateMonthlyRecordStatus(id: string, status: MonthlyRecordStatus): Promise<MonthlyRecord> {
-    const userId = authService.getCurrentUserId();
-    const index = mockRecords.findIndex(r => r.id === id && r.userId === userId);
-    if (index === -1) throw new Error('Registro não encontrado');
-    
-    mockRecords[index] = { ...mockRecords[index], status };
-    return { ...mockRecords[index] };
+  // Atualiza apenas o status de um registro
+  async updateMonthlyRecordStatus(userId: string, id: string, status: MonthlyRecordStatus): Promise<MonthlyRecord> {
+    const updatePayload: MonthlyRecordUpdate = {
+      status,
+    };
+
+    const { data, error } = await supabase
+      .from('monthly_records')
+      .update(updatePayload)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error('Registro não encontrado ou erro ao atualizar status');
+    }
+
+    return monthlyRecordMapper.toDomain(data as MonthlyRecordDto);
   },
 
-  async cancelMonthlyRecord(id: string): Promise<MonthlyRecord> {
-    return this.updateMonthlyRecordStatus(id, 'Cancelado');
+  // Marca um registro como cancelado
+  async cancelMonthlyRecord(userId: string, id: string): Promise<MonthlyRecord> {
+    return this.updateMonthlyRecordStatus(userId, id, 'Cancelado');
   },
 };

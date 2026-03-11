@@ -1,93 +1,108 @@
-import { DebtPlan, DebtPriority } from '@/models/debtPlan.model';
+import { DebtPlan } from '@/models/debtPlan.model';
 import { CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
-import { authService } from '@/services/auth.service';
-
-// TEMP MOCK - remover quando API real estiver pronta
-let mockDebtPlans: DebtPlan[] = [
-  {
-    id: '1',
-    userId: '1',
-    nome: 'Financiamento Imobiliário',
-    valorTotal: 450000,
-    valorMensal: 2500,
-    prioridade: DebtPriority.HIGH,
-    dataInicio: '2023-01-01T00:00:00.000Z',
-    parcelasTotal: 360,
-    parcelasPagas: 14,
-  },
-  {
-    id: '2',
-    userId: '1',
-    nome: 'Cartão de Crédito Platinum',
-    valorTotal: 12500,
-    valorMensal: 1200,
-    prioridade: DebtPriority.HIGH,
-    dataInicio: '2024-01-15T00:00:00.000Z',
-    parcelasTotal: 12,
-    parcelasPagas: 3,
-  },
-  {
-    id: '3',
-    userId: '1',
-    nome: 'Empréstimo Pessoal',
-    valorTotal: 25000,
-    valorMensal: 850,
-    prioridade: DebtPriority.MEDIUM,
-    dataInicio: '2023-06-10T00:00:00.000Z',
-    parcelasTotal: 48,
-    parcelasPagas: 10,
-  }
-];
+import { debtPlanMapper } from '@/mappers/debtPlans.mapper';
+import { supabase } from '@/core/supabase/client';
 
 export const DebtPlansService = {
-  async listDebtPlans(): Promise<DebtPlan[]> {
-    const userId = authService.getCurrentUserId();
-    if (!userId) return [];
+  async listDebtPlans(userId: string): Promise<DebtPlan[]> {
+    const { data, error } = await supabase
+      .from('debt_plans')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-    // Simula atraso de rede
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const filtered = mockDebtPlans.filter(p => p.userId === userId);
-    return Promise.resolve([...filtered]);
+    if (error) throw new Error(error.message);
+    if (!data) return [];
+
+    return data.map(debtPlanMapper.toDomain);
   },
 
-  async getDebtPlanById(id: string): Promise<DebtPlan> {
-    const userId = authService.getCurrentUserId();
-    const plan = mockDebtPlans.find(p => p.id === id && p.userId === userId);
-    if (!plan) throw new Error('Plano não encontrado');
-    return Promise.resolve({ ...plan });
+  async getDebtPlanById(userId: string, id: string): Promise<DebtPlan> {
+    const { data, error } = await supabase
+      .from('debt_plans')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Plano não encontrado');
+
+    return debtPlanMapper.toDomain(data);
   },
 
-  async createDebtPlan(payload: CreateDebtPlanRequest): Promise<DebtPlan> {
-    const userId = authService.getCurrentUserId();
-    if (!userId) throw new Error('Utilizador não autenticado');
+  async createDebtPlan(userId: string, payload: CreateDebtPlanRequest): Promise<DebtPlan> {
+    const startDate = new Date(payload.start_date);
+    const endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + payload.total_installments);
 
-    const newPlan: DebtPlan = {
-      id: Math.random().toString(36).substring(7),
-      userId,
-      nome: payload.nome,
-      valorTotal: payload.valorTotal,
-      valorMensal: payload.valorMensal,
-      prioridade: payload.prioridade,
-      dataInicio: payload.dataInicio,
-      parcelasTotal: payload.parcelasTotal,
-      parcelasPagas: 0,
-    };
-    mockDebtPlans = [newPlan, ...mockDebtPlans];
-    return Promise.resolve(newPlan);
+    const { data, error } = await supabase
+      .from('debt_plans')
+      .insert({
+        user_id: userId,
+        name: payload.name,
+        total_amount: payload.total_amount,
+        remaining_amount: payload.remaining_amount,
+        monthly_payment: payload.monthly_payment,
+        interest_rate: payload.interest_rate || 0,
+        priority: payload.priority,
+        start_date: payload.start_date,
+        end_date: endDate.toISOString(),
+        total_installments: payload.total_installments,
+        paid_installments: 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return debtPlanMapper.toDomain(data);
   },
 
-  async registerInstallmentPayment(id: string, quantity: number = 1): Promise<DebtPlan> {
-    const userId = authService.getCurrentUserId();
-    const index = mockDebtPlans.findIndex(p => p.id === id && p.userId === userId);
-    if (index === -1) throw new Error('Plano não encontrado');
-    
-    const plan = mockDebtPlans[index];
-    const updatedPlan = {
-      ...plan,
-      parcelasPagas: Math.min(plan.parcelasTotal, plan.parcelasPagas + quantity)
-    };
-    
-    mockDebtPlans[index] = updatedPlan;
-    return Promise.resolve({ ...updatedPlan });
+  async updateDebtPlan(userId: string, id: string, updates: Partial<DebtPlan>): Promise<DebtPlan> {
+    // Note: This mapping is partial and might need more fields if the UI allows full editing
+    const { data, error } = await supabase
+      .from('debt_plans')
+      .update({
+        name: updates.nome,
+        total_amount: updates.valorTotal,
+        remaining_amount: updates.remainingAmount,
+        monthly_payment: updates.valorMensal,
+        interest_rate: updates.interestRate,
+        priority: updates.prioridade,
+        start_date: updates.dataInicio,
+        total_installments: updates.parcelasTotal,
+        paid_installments: updates.parcelasPagas,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return debtPlanMapper.toDomain(data);
+  },
+
+  async registerInstallmentPayment(userId: string, id: string, quantity: number = 1): Promise<DebtPlan> {
+    const plan = await this.getDebtPlanById(userId, id);
+
+    const newPaidInstallments = Math.min(plan.parcelasTotal, plan.parcelasPagas + quantity);
+    const amountToDeduct = quantity * plan.valorMensal;
+    const newRemainingAmount = Math.max(0, plan.remainingAmount - amountToDeduct);
+
+    const { data, error } = await supabase
+      .from('debt_plans')
+      .update({
+        paid_installments: newPaidInstallments,
+        remaining_amount: newRemainingAmount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return debtPlanMapper.toDomain(data);
   },
 };

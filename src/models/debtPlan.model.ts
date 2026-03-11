@@ -9,7 +9,9 @@ export interface DebtPlan {
   userId: string;
   nome: string;
   valorTotal: number;
+  remainingAmount: number;
   valorMensal: number;
+  interestRate: number;
   prioridade: DebtPriority;
   dataInicio: string; // ISO
   dataTermino?: string; // ISO
