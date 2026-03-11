@@ -1,25 +1,16 @@
-import { env } from '../config/env';
+import { createClient } from '@supabase/supabase-js';
+import { Database } from './database.types';
 
-// Mock Supabase client for now to prevent crashes when environment variables are missing
-// This will be replaced with createClient once Supabase is fully configured
-export const supabase = {
-  auth: {
-    getSession: async () => ({ data: { session: null }, error: null }),
-    signInWithPassword: async () => ({ data: { session: null }, error: new Error('Supabase not configured') }),
-    signUp: async () => ({ data: { session: null }, error: new Error('Supabase not configured') }),
-    signInWithOAuth: async () => ({ error: new Error('Supabase not configured') }),
-    signOut: async () => ({ error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-  },
-  from: (table: string) => ({
-    select: () => ({
-      eq: () => ({
-        single: async () => ({ data: null, error: null }),
-      }),
-    }),
-  }),
-};
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// When Supabase is ready, it would be:
-// import { createClient } from '@supabase/supabase-js';
-// export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'As credenciais do Supabase não foram encontradas. Verifique se o arquivo .env está configurado com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.'
+  );
+}
+
+export const supabase = createClient<Database>(
+  supabaseUrl,
+  supabaseAnonKey
+);

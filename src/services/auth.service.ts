@@ -1,107 +1,87 @@
 import { User, Session } from '@/models/user.model';
+import { supabase } from '@/core/supabase/client';
 
-const SESSION_KEY = 'equilibra_session';
-
-const MOCK_USER: User = {
-  id: '1',
-  email: 'rodrigomac.rb@gmail.com',
-  name: 'Rodrigo Mac',
-  avatarUrl: 'https://picsum.photos/seed/user/200/200',
-};
-
-const MOCK_SESSION: Session = {
-  user: MOCK_USER,
-  accessToken: 'mock-jwt-token',
-};
+const mapSupabaseUser = (sbUser: any): User => ({
+  id: sbUser.id,
+  email: sbUser.email!,
+  name: sbUser.user_metadata?.full_name || sbUser.email!.split('@')[0],
+  avatarUrl: sbUser.user_metadata?.avatar_url || `https://picsum.photos/seed/${sbUser.email}/200/200`,
+});
 
 export const authService = {
   async login(email: string, password: string): Promise<Session> {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    // Simple mock validation
-    if (email && password.length >= 6) {
-      const session: Session = {
-        user: {
-          id: '1',
-          email,
-          name: email.split('@')[0],
-          avatarUrl: `https://picsum.photos/seed/${email}/200/200`,
-        },
-        accessToken: 'mock-jwt-token-' + Date.now(),
-      };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      return session;
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        throw new Error('Credenciais inválidas. Verifique seu e-mail e senha.');
+      }
+      throw new Error(error.message);
     }
 
-    throw new Error('Credenciais inválidas. Tente novamente.');
+    if (!data.session) {
+      throw new Error('Falha ao instanciar a sessão.');
+    }
+
+    return {
+      user: mapSupabaseUser(data.user),
+      accessToken: data.session.access_token,
+    };
   },
 
   async loginWithGoogle(): Promise<void> {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    const session: Session = {
-      user: {
-        id: '1',
-        email: 'google.user@example.com',
-        name: 'Google User',
-        avatarUrl: 'https://picsum.photos/seed/google/200/200',
-      },
-      accessToken: 'mock-google-token-' + Date.now(),
-    };
-    
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    // In a real OAuth flow, this would redirect, but here we just simulate success
-    window.location.reload(); 
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      }
+    });
+
+    if (error) throw new Error(error.message);
   },
 
   async logout(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    localStorage.removeItem(SESSION_KEY);
+    const { error } = await supabase.auth.signOut();
+    if (error) throw new Error(error.message);
   },
 
   async getSession(): Promise<Session | null> {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    const sessionStr = localStorage.getItem(SESSION_KEY);
-    if (sessionStr) {
-      try {
-        return JSON.parse(sessionStr) as Session;
-      } catch {
-        return null;
-      }
-    }
-    return null;
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session) return null;
+
+    return {
+      user: mapSupabaseUser(session.user),
+      accessToken: session.access_token,
+    };
   },
 
   getCurrentUserId(): string | null {
-    const sessionStr = localStorage.getItem(SESSION_KEY);
-    if (!sessionStr) return null;
-    try {
-      const session = JSON.parse(sessionStr) as Session;
-      return session.user.id;
-    } catch {
-      return null;
-    }
+    throw new Error('Utilize o useAuthStore para capturar o ID síncrono da sessão ativa.');
   },
 
   async register(name: string, email: string, password: string): Promise<Session> {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        }
+      }
+    });
 
-    const session: Session = {
-      user: {
-        id: '1',
-        email,
-        name,
-        avatarUrl: `https://picsum.photos/seed/${name}/200/200`,
-      },
-      accessToken: 'mock-jwt-token-reg-' + Date.now(),
+    if (error) throw new Error(error.message);
+
+    if (!data.session) {
+      // Supabase Email Confirmations are enabled by default on new projects
+      // The session is null until they click the verification link
+      throw new Error('Conta criada! Por favor, verifique sua caixa de entrada para confirmar o e-mail antes de logar.');
+    }
+
+    return {
+      user: mapSupabaseUser(data.user),
+      accessToken: data.session.access_token,
     };
-
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    return session;
   },
 };

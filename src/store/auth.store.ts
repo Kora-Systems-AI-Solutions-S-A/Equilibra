@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { authService } from '@/services/auth.service';
 import { User, Session } from '@/models/user.model';
+import { supabase } from '@/core/supabase/client';
 
 interface AuthState {
   user: User | null;
@@ -29,13 +30,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      const session = await authService.login(email, password);
-      set({
-        session,
-        user: session.user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      await authService.login(email, password);
+      // O onAuthStateChange cuidará do preenchimento da `session` e `user`
     } catch (error: any) {
       set({
         error: error.message || 'Erro ao entrar. Tente novamente.',
@@ -44,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
-  
+
   loginWithGoogle: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -61,15 +57,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (name: string, email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      const session = await authService.register(name, email, password);
-      set({
-        session,
-        user: session.user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      await authService.register(name, email, password);
     } catch (error: any) {
       set({
+        // Se a confirmação de e-mail estiver ativa, a service fornece o feedback adequado
         error: error.message || 'Erro ao cadastrar. Tente novamente.',
         isLoading: false,
       });
@@ -81,17 +72,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       await authService.logout();
-      set({
-        user: null,
-        session: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
     } catch (error) {
       set({ isLoading: false });
     }
   },
 
+  // Bootstrap inicial: verifica a sessão existente uma única vez ao carregar a app.
+  // Não configura o listener — esse papel pertence ao initializeAuthListener.
   checkAuth: async () => {
     try {
       const session = await authService.getSession();
@@ -101,6 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           user: session.user,
           isAuthenticated: true,
           isInitialized: true,
+          isLoading: false,
         });
       } else {
         set({
@@ -108,17 +96,60 @@ export const useAuthStore = create<AuthState>((set) => ({
           user: null,
           isAuthenticated: false,
           isInitialized: true,
+          isLoading: false,
         });
       }
-    } catch (error) {
+    } catch {
       set({
         session: null,
         user: null,
         isAuthenticated: false,
         isInitialized: true,
+        isLoading: false,
       });
     }
   },
 
   clearError: () => set({ error: null }),
 }));
+
+// Inicializa o listener de mudanças de sessão do Supabase.
+// Deve ser chamado UMA ÚNICA VEZ na raiz da aplicação (via useAuthListener).
+// Retorna a função de unsubscribe para evitar memory leak.
+export const initializeAuthListener = () => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      useAuthStore.setState({
+        session: {
+          user: {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+            avatarUrl: session.user.user_metadata?.avatar_url,
+          },
+          accessToken: session.access_token,
+        },
+        user: {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+          avatarUrl: session.user.user_metadata?.avatar_url,
+        },
+        isAuthenticated: true,
+        isInitialized: true,
+        isLoading: false,
+      });
+    } else {
+      useAuthStore.setState({
+        session: null,
+        user: null,
+        isAuthenticated: false,
+        isInitialized: true,
+        isLoading: false,
+      });
+    }
+  });
+
+  // Retorna o unsubscribe para ser invocado pelo hook de cleanup
+  return () => subscription.unsubscribe();
+};

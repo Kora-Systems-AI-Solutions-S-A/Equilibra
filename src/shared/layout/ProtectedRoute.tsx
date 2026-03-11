@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -6,13 +6,12 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+// Guarda de rota: aguarda o bootstrap do auth (isInitialized)
+// e redireciona para login se não autenticado.
+// O bootstrap é feito pelo useAuthListener nos Providers — não aqui.
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isInitialized, checkAuth } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
   const location = useLocation();
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   if (!isInitialized) {
     return (
@@ -34,3 +33,4 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   return <>{children}</>;
 };
+
