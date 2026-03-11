@@ -1,5 +1,5 @@
 import { DebtPlan } from '@/models/debtPlan.model';
-import { CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
+import { CreateDebtPlanRequest, UpdateDebtPlanRequest } from '@/mappers/debtPlans.dto';
 import { debtPlanMapper } from '@/mappers/debtPlans.mapper';
 import { supabase } from '@/core/supabase/client';
 
@@ -58,20 +58,11 @@ export const DebtPlansService = {
     return debtPlanMapper.toDomain(data);
   },
 
-  async updateDebtPlan(userId: string, id: string, updates: Partial<DebtPlan>): Promise<DebtPlan> {
-    // Note: This mapping is partial and might need more fields if the UI allows full editing
+  async updateDebtPlan(userId: string, id: string, payload: UpdateDebtPlanRequest): Promise<DebtPlan> {
     const { data, error } = await supabase
       .from('debt_plans')
       .update({
-        name: updates.nome,
-        total_amount: updates.valorTotal,
-        remaining_amount: updates.remainingAmount,
-        monthly_payment: updates.valorMensal,
-        interest_rate: updates.interestRate,
-        priority: updates.prioridade,
-        start_date: updates.dataInicio,
-        total_installments: updates.parcelasTotal,
-        paid_installments: updates.parcelasPagas,
+        ...payload,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

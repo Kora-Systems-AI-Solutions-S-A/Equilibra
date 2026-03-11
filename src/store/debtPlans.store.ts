@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { DebtPlan } from '@/models/debtPlan.model';
 import { DebtPlansService } from '@/services/debtPlans.service';
+import { debtPlanMapper } from '@/mappers/debtPlans.mapper';
 import { CreateDebtPlanRequest } from '@/mappers/debtPlans.dto';
 import { useAuthStore } from '@/store/auth.store';
+import { useNotificationStore } from '@/store/notification.store';
 
 interface DebtPlansState {
   items: DebtPlan[];
@@ -32,11 +34,9 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
       const items = await DebtPlansService.listDebtPlans(userId);
       set({ items, isLoading: false });
     } catch (error) {
-      console.error('Failed to fetch debt plans:', error);
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao carregar planos'
-      });
+      const message = error instanceof Error ? error.message : 'Erro ao carregar planos';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
       set({ items: [] });
     }
   },
@@ -50,11 +50,9 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
       const selected = await DebtPlansService.getDebtPlanById(userId, id);
       set({ selected, isLoading: false });
     } catch (error) {
-      console.error('Failed to fetch debt plan details:', error);
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao carregar detalhes'
-      });
+      const message = error instanceof Error ? error.message : 'Erro ao carregar detalhes';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -70,11 +68,9 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
         isLoading: false
       }));
     } catch (error) {
-      console.error('Failed to create debt plan:', error);
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao criar plano'
-      });
+      const message = error instanceof Error ? error.message : 'Erro ao criar plano';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
       throw error;
     }
   },
@@ -85,18 +81,17 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
 
     set({ isLoading: true, error: undefined });
     try {
-      const updatedPlan = await DebtPlansService.updateDebtPlan(userId, id, updates);
+      const payload = debtPlanMapper.toUpdateRequest(updates);
+      const updatedPlan = await DebtPlansService.updateDebtPlan(userId, id, payload);
       set((state) => ({
         items: state.items.map((item) => (item.id === id ? updatedPlan : item)),
         selected: state.selected?.id === id ? updatedPlan : state.selected,
         isLoading: false
       }));
     } catch (error) {
-      console.error('Failed to update plan:', error);
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao atualizar plano'
-      });
+      const message = error instanceof Error ? error.message : 'Erro ao atualizar plano';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
       throw error;
     }
   },
@@ -114,11 +109,9 @@ export const useDebtPlansStore = create<DebtPlansState>((set, get) => ({
         isLoading: false,
       }));
     } catch (error) {
-      console.error('Failed to register payment:', error);
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao registrar pagamento'
-      });
+      const message = error instanceof Error ? error.message : 'Erro ao registrar pagamento';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
       throw error;
     }
   },

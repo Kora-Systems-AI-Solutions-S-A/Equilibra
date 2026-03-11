@@ -3,6 +3,7 @@ import { InvestmentPlan } from '@/models/investmentPlan.model';
 import * as investmentService from '@/services/investmentPlans.service';
 import { CreateInvestmentPlanRequest } from '@/mappers/investmentPlans.dto';
 import { useAuthStore } from './auth.store';
+import { useNotificationStore } from '@/store/notification.store';
 
 interface InvestmentsState {
   investments: InvestmentPlan[];
@@ -33,8 +34,10 @@ export const useInvestmentsStore = create<InvestmentsState>((set) => ({
     try {
       const data = await investmentService.InvestmentPlansService.listInvestmentPlans(userId);
       set({ investments: data, isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar investimentos';
+      set({ error: message, isLoading: false });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -46,8 +49,10 @@ export const useInvestmentsStore = create<InvestmentsState>((set) => ({
     try {
       const data = await investmentService.InvestmentPlansService.getInvestmentPlanById(userId, id);
       set({ selectedInvestment: data, isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar detalhes do investimento';
+      set({ error: message, isLoading: false });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -65,8 +70,10 @@ export const useInvestmentsStore = create<InvestmentsState>((set) => ({
         investments: [newPlan, ...state.investments],
         isLoading: false
       }));
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao criar investimento';
+      set({ error: message, isLoading: false });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -84,8 +91,10 @@ export const useInvestmentsStore = create<InvestmentsState>((set) => ({
         investments: state.investments.map(inv => inv.id === planId ? updatedPlan : inv),
         isLoading: false
       }));
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao registrar aporte';
+      set({ error: message, isLoading: false });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   }
 }));

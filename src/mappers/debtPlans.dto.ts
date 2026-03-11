@@ -27,6 +27,19 @@ export interface CreateDebtPlanRequest {
   total_installments: number;
 }
 
+export interface UpdateDebtPlanRequest {
+  name?: string;
+  total_amount?: number;
+  remaining_amount?: number;
+  monthly_payment?: number;
+  interest_rate?: number;
+  priority?: string;
+  start_date?: string;
+  end_date?: string | null;
+  total_installments?: number;
+  paid_installments?: number;
+}
+
 export interface RegisterPaymentRequest {
   quantity: number;
 }

@@ -4,6 +4,7 @@ import { MonthlyRecordsService } from '@/services/monthlyRecords.service';
 import { CreateMonthlyRecordRequest, UpdateMonthlyRecordRequest } from '@/mappers/monthlyRecords.dto';
 import { getCurrentMonthYear } from '@/lib/date';
 import { useAuthStore } from '@/store/auth.store';
+import { useNotificationStore } from '@/store/notification.store';
 
 interface MonthlyRecordsState {
   items: MonthlyRecord[];
@@ -42,10 +43,9 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
       const items = await MonthlyRecordsService.listMonthlyRecords(userId, ref);
       set({ items, isLoading: false });
     } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao carregar registros'
-      });
+      const message = error instanceof Error ? error.message : 'Erro ao carregar registros';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -53,11 +53,14 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
 
+    set({ isLoading: true, error: undefined });
     try {
       const allRecords = await MonthlyRecordsService.listMonthlyRecords(userId);
-      set({ allRecords });
+      set({ allRecords, isLoading: false });
     } catch (error) {
       console.error(error);
+      const message = error instanceof Error ? error.message : 'Erro ao carregar histórico';
+      set({ isLoading: false, error: message });
     }
   },
 
@@ -65,7 +68,7 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     const userId = useAuthStore.getState().user?.id;
     if (!userId) throw new Error('Utilizador não autenticado');
 
-    set({ isLoading: true });
+    set({ isLoading: true, error: undefined });
     try {
       const newItem = await MonthlyRecordsService.createMonthlyRecord(userId, payload);
       // Update allRecords
@@ -76,7 +79,9 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
       }
       set({ isLoading: false });
     } catch (error) {
-      set({ isLoading: false, error: 'Erro ao criar registro' });
+      const message = error instanceof Error ? error.message : 'Erro ao criar registro';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
       throw error;
     }
   },
@@ -85,7 +90,7 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     const userId = useAuthStore.getState().user?.id;
     if (!userId) throw new Error('Utilizador não autenticado');
 
-    set({ isLoading: true });
+    set({ isLoading: true, error: undefined });
     try {
       const updated = await MonthlyRecordsService.updateMonthlyRecord(userId, id, payload);
       set((state) => ({
@@ -94,7 +99,9 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
         isLoading: false
       }));
     } catch (error) {
-      set({ isLoading: false, error: 'Erro ao atualizar registro' });
+      const message = error instanceof Error ? error.message : 'Erro ao atualizar registro';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
       throw error;
     }
   },
@@ -103,14 +110,18 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
 
+    set({ isLoading: true, error: undefined });
     try {
       const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(userId, id, 'Pago');
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
-        allRecords: state.allRecords.map(item => item.id === id ? updated : item)
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item),
+        isLoading: false
       }));
     } catch (error) {
-      console.error(error);
+      const message = error instanceof Error ? error.message : 'Erro ao marcar como pago';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -118,14 +129,18 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
 
+    set({ isLoading: true, error: undefined });
     try {
       const updated = await MonthlyRecordsService.updateMonthlyRecordStatus(userId, id, 'Recebido');
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
-        allRecords: state.allRecords.map(item => item.id === id ? updated : item)
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item),
+        isLoading: false
       }));
     } catch (error) {
-      console.error(error);
+      const message = error instanceof Error ? error.message : 'Erro ao marcar como recebido';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
@@ -133,14 +148,18 @@ export const useMonthlyRecordsStore = create<MonthlyRecordsState>((set, get) => 
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
 
+    set({ isLoading: true, error: undefined });
     try {
       const updated = await MonthlyRecordsService.cancelMonthlyRecord(userId, id);
       set((state) => ({
         items: state.items.map(item => item.id === id ? updated : item),
-        allRecords: state.allRecords.map(item => item.id === id ? updated : item)
+        allRecords: state.allRecords.map(item => item.id === id ? updated : item),
+        isLoading: false
       }));
     } catch (error) {
-      console.error(error);
+      const message = error instanceof Error ? error.message : 'Erro ao cancelar registro';
+      set({ isLoading: false, error: message });
+      useNotificationStore.getState().showNotification(message, 'error');
     }
   },
 
