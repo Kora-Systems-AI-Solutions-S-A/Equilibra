@@ -226,12 +226,12 @@ export const ModalExpandedCard = () => {
 
     return (
       <div className="flex flex-col gap-8">
-        <div className="flex items-center justify-between p-8 rounded-2xl text-white" style={{ backgroundColor: 'var(--modal-accent)', color: '#000' }}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 rounded-2xl text-white gap-6" style={{ backgroundColor: 'var(--modal-accent)', color: '#000' }}>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ opacity: 0.7 }}>Total Recebido ({selectedMonth})</p>
-            <p className="text-5xl font-black">{formatCurrency(totalReceived)}</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1" style={{ opacity: 0.7 }}>Total Recebido ({selectedMonth})</p>
+            <p className="text-3xl sm:text-5xl font-black">{formatCurrency(totalReceived)}</p>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-black/10 pt-4 sm:pt-0">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
               <TrendingUp size={16} />
               <span className="text-xs font-bold">{comparison >= 0 ? '+' : ''}{comparison.toFixed(1)}%</span>
@@ -456,10 +456,11 @@ export const ModalExpandedCard = () => {
         </div>
 
         <div className="flex flex-col gap-4 flex-1 min-h-0">
-          <div className="flex justify-between items-center shrink-0">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
             <h4 className="text-sm font-semibold uppercase tracking-tight" style={{ color: 'var(--modal-muted)' }}>Todas as Transações</h4>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center bg-[var(--modal-surface)] border border-[var(--modal-border)] rounded-lg p-1">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              {/* Desktop Filters */}
+              <div className="hidden md:flex items-center bg-[var(--modal-surface)] border border-[var(--modal-border)] rounded-lg p-1">
                 {(['Todos', 'Pago', 'Pendente'] as const).map((f) => (
                   <button
                     key={f}
@@ -475,43 +476,67 @@ export const ModalExpandedCard = () => {
                   </button>
                 ))}
               </div>
-              <Button variant="outline" size="sm" onClick={exportToCSV}>Exportar CSV</Button>
+
+              {/* Mobile Mobile Select Filter */}
+              <div className="flex md:hidden flex-1 relative">
+                <select
+                  value={summaryFilter}
+                  onChange={(e) => setSummaryFilter(e.target.value as any)}
+                  className="w-full bg-[var(--modal-surface)] border border-[var(--modal-border)] text-[var(--modal-text)] text-xs font-bold uppercase py-2.5 px-3 rounded-xl appearance-none outline-none"
+                >
+                  <option value="Todos">Todos os Status</option>
+                  <option value="Pago">Apenas Pagos</option>
+                  <option value="Pendente">Apenas Pendentes</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <LayoutGrid size={14} className="text-[var(--modal-accent)]" />
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToCSV}
+                className="w-full md:w-auto h-10 md:h-8"
+              >
+                Exportar CSV
+              </Button>
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-sm border flex flex-col flex-1 min-h-0" style={{ backgroundColor: 'var(--modal-surface)', borderColor: 'var(--modal-border)' }}>
-            <div className="overflow-y-auto scrollbar-hide">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto overflow-y-auto scrollbar-hide">
+              <table className="w-full text-left border-collapse min-w-[600px] md:min-w-0">
                 <thead className="sticky top-0 z-10" style={{ backgroundColor: 'var(--modal-surface)' }}>
                   <tr className="text-[10px] font-bold uppercase tracking-widest border-b" style={{ color: 'var(--modal-muted)', borderColor: 'var(--modal-border)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
-                    <th className="px-6 py-4">Data</th>
-                    <th className="px-6 py-4">Descrição</th>
-                    <th className="px-6 py-4">Categoria</th>
-                    <th className="px-6 py-4">Valor</th>
-                    <th className="px-6 py-4">Situação</th>
-                    <th className="px-6 py-4 text-right">Ações</th>
+                    <th className="px-4 md:px-6 py-4">Data</th>
+                    <th className="px-4 md:px-6 py-4">Descrição</th>
+                    <th className="px-4 md:px-6 py-4">Categoria</th>
+                    <th className="px-4 md:px-6 py-4">Valor</th>
+                    <th className="px-4 md:px-6 py-4">Situação</th>
+                    <th className="px-4 md:px-6 py-4 text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: 'var(--modal-border)' }}>
                   {finalFilteredRecords.map((t) => (
                     <tr key={t.id} className="transition-colors" style={{ backgroundColor: 'transparent' }}>
-                      <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--modal-text)' }}>{formatDate(t.data)}</td>
-                      <td className="px-6 py-4 text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{t.descricao}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--modal-text)' }}>
+                      <td className="px-4 md:px-6 py-4 text-sm font-medium whitespace-nowrap" style={{ color: 'var(--modal-text)' }}>{formatDate(t.data)}</td>
+                      <td className="px-4 md:px-6 py-4 text-sm font-semibold" style={{ color: 'var(--modal-text)' }}>{t.descricao}</td>
+                      <td className="px-4 md:px-6 py-4">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--modal-text)' }}>
                           {t.tipo === 'Receita' ? 'Receita' : (t.categoria || t.origem || 'Geral')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold" style={{ color: 'var(--modal-text)' }}>{formatCurrency(t.valor)}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4 text-sm font-bold whitespace-nowrap" style={{ color: 'var(--modal-text)' }}>{formatCurrency(t.valor)}</td>
+                      <td className="px-4 md:px-6 py-4">
                         <span className={cn(
-                          "text-[10px] font-bold uppercase",
+                          "text-[10px] font-bold uppercase whitespace-nowrap",
                           t.status === 'Pago' || t.status === 'Recebido' ? 'text-green-400' :
                             t.status === 'Cancelado' ? 'text-slate-500' : 'text-orange-400'
                         )}>
                           {t.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 md:px-6 py-4 text-right">
                         <RowActionsMenu actions={getRecordActions(t)} />
                       </td>
                     </tr>
