@@ -46,6 +46,7 @@ Agents must respect this roadmap when making implementation decisions and must n
 > Expand what the user can register and manage
 
 - [ ] Investment balance view
+  - [ ] Movimens/mobilization/transfers
 - [ ] Recurring records
   - [ ] Create / update / delete recurring entries
   - [ ] Monthly reminder notifications for recurring records
