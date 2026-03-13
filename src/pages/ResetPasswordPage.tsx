@@ -38,6 +38,8 @@ export const ResetPasswordPage = () => {
     }
 
     setIsValidating(false);
+    // Limpa o token da URL para segurança (não deixar no histórico do browser)
+    window.history.replaceState(null, '', window.location.pathname);
   }, [clearError, navigate, showNotification]);
 
   const handleSubmit = async (e: React.FormEvent) => {
