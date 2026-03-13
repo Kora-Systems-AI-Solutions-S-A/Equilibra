@@ -1,309 +1,326 @@
 # Equilibra — Brain Map
 
-Este documento descreve o **mapa mental da aplicação Equilibra**.
+This document describes the **mental map of the Equilibra application**.
 
-Ele ajuda ferramentas de IA a compreender:
+It helps AI tools understand:
 
-- estrutura do sistema
-- domínios da aplicação
-- fluxo de dados
-- responsabilidades das camadas
+- system structure
+- application domains
+- data flow
+- layer responsibilities
 
-Este documento **não substitui o project-context**, ele complementa com visão estrutural.
-
----
-
-# Domínio da Aplicação
-
-Equilibra é uma aplicação de **gestão financeira pessoal**.
-
-O objetivo é permitir que o utilizador tenha **visão clara da sua situação financeira** e consiga tomar decisões financeiras conscientes.
-
-Principais áreas do domínio:
-
-- Planejamento de dívidas
-- Registro de receitas
-- Resumo financeiro mensal
-- Gestão de investimentos
+This document **does not replace project-context** — it complements it with a structural overview.
 
 ---
 
-# Domínios Funcionais
+# Application Domain
 
-A aplicação possui os seguintes domínios principais.
+Equilibra is a **personal finance management application** in production.
+
+The goal is to give users a **clear view of their financial situation** and help them make conscious financial decisions.
+
+Main domain areas:
+
+- Debt planning
+- Income and expense tracking
+- Monthly financial summary
+- Investment management and contributions
+
+---
+
+# Functional Domains
 
 ## Auth
 
-Responsável por:
+Responsible for:
 
-- autenticação do utilizador
-- gestão de sessão
-- proteção de rotas
+- real authentication via Supabase Auth
+- session management
+- route protection
+- store cleanup on logout and auth state change
 
-Localização:
+Location:
 
-
+```
 src/features/auth
-
+```
 
 ---
 
 ## Dashboard
 
-Responsável pela visão consolidada da situação financeira do utilizador.
+Responsible for the consolidated financial view of the user.
 
-Localização:
+Location:
 
-
+```
 src/features/dashboard
+```
 
+The dashboard is composed of **independent cards**, each representing a financial domain.
 
-O dashboard é composto por **cards independentes**, cada um representando um domínio financeiro.
-
-Cards atuais:
+Current cards:
 
 - Debt Planning
 - Income
 - Monthly Summary
 - Investments
 
-Cada card representa **um domínio financeiro isolado**.
+Each card represents **an isolated financial domain**.
+
+Empty states are implemented in all cards.
 
 ---
 
-# Arquitetura da Aplicação
+# Application Architecture
 
-A aplicação segue uma arquitetura baseada em **features + camadas separadas**.
+The application follows an architecture based on **features + separated layers**.
 
-Estrutura principal:
+Main structure:
 
-
+```
 src
 │
-├ core
-│
-├ features
-│
-├ pages
-│
-├ services
-│
-├ store
-│
-└ shared
-
-
-Essa estrutura permite:
-
-- isolamento de domínios
-- separação clara de responsabilidades
-- evolução incremental da aplicação
+├─ core
+├─ features
+├─ pages
+├─ services
+├─ store
+├─ mappers
+├─ models
+└─ shared
+```
 
 ---
 
-# Responsabilidade das Camadas
+# Layer Responsibilities
 
 ## UI (features / shared/ui)
 
-Responsável por:
+Responsible for:
 
-- apresentação
-- interação
+- presentation
+- interaction
 - layout
+- empty states
 
-A UI **não deve conter lógica de negócio**.
-
-A UI **não deve acessar APIs diretamente**.
+The UI **must not contain business logic**.
+The UI **must not access Supabase directly**.
 
 ---
 
 ## Store (Zustand)
 
-Responsável por:
+Responsible for:
 
-- coordenação de estado
-- ações de feature
-- comunicação com services
+- state coordination
+- feature actions
+- service communication
+- loading and error state
 
-A store atua como **orquestrador da lógica de aplicação**.
+Main stores:
+
+- `auth.store`
+- `monthlyRecords.store`
+- `debtPlans.store`
+- `investments.store`
+- `notification.store`
+
+All stores implement `reset()` and are cleared on logout and auth state change.
+
+The store acts as the **application logic orchestrator**.
 
 ---
 
 ## Services
 
-Responsável por:
+Responsible for:
 
-- acesso a dados
-- comunicação com backend
-- integração com APIs externas
+- data access via Supabase
+- queries filtered by `user_id`
+- using mappers for data transformation
 
-Services **não devem conter lógica de UI**.
+Services **must not contain UI logic**.
+
+---
+
+## Mappers
+
+Responsible for converting between:
+
+- Domain Models (camelCase) → used in stores and UI
+- DTOs (snake_case) → used in Supabase queries
+
+This is the **only layer** where format conversion occurs.
 
 ---
 
 ## Core
 
-Responsável por:
+Responsible for:
 
-- infraestrutura
-- cliente HTTP
-- integração com Supabase
-- configurações globais
+- infrastructure
+- Supabase client
+- global configuration
 
 ---
 
-# Fluxo de Dados
+# Data Flow
 
-Fluxo padrão da aplicação:
+Standard application flow:
 
-
+```
 UI
 ↓
 Feature Components
 ↓
 Store (Zustand)
 ↓
-Services
+Services (+ Mappers)
 ↓
-Core (Supabase Client / HTTP)
+Core (Supabase Client)
 ↓
-Database
+Database (PostgreSQL + RLS)
+```
 
+This flow **must be preserved**.
 
-Este fluxo **deve ser preservado**.
-
-A UI **nunca deve acessar APIs ou Supabase diretamente**.
+The UI **must never access Supabase directly**.
 
 ---
 
-# Organização de Features
+# Data Domains (Supabase)
 
-Cada feature é organizada por domínio funcional.
+| Table | Description |
+|---|---|
+| `profiles` | Auto-created via trigger on `auth.users` |
+| `monthly_records` | Monthly income and expense entries |
+| `debt_plans` | Debt payoff planning with auto-calculated end date |
+| `investments` | Investment plans |
+| `investment_contributions` | Contribution history linked to investments |
 
-Exemplo:
+RLS active on all tables: `auth.uid() = user_id`
 
+Investment balance is calculated in memory inside the service.
 
+---
+
+# Feature Organization
+
+Each feature is organized by functional domain.
+
+Example:
+
+```
 features/dashboard
+  ├─ investimentos
+  ├─ planejamento-dividas
+  └─ resumo-mensal
+```
 
-investimentos
-planejamento-dividas
-resumo-mensal
-
-
-Dentro de cada domínio podem existir:
+Inside each domain there may be:
 
 - components
 - modals
-- hooks específicos
-- utilitários
-
-Essa organização evita:
-
-- componentes gigantes
-- mistura de responsabilidades
-- acoplamento entre domínios
+- domain-specific hooks
+- utilities
 
 ---
 
 # Design System
 
-Componentes reutilizáveis vivem em:
+Reusable components live in:
 
-
+```
 src/shared/ui
+```
 
-
-Exemplos:
+Examples:
 
 - Button
 - ModalBase
 - FloatingLabelInput
 - MoneyInput
 - DrawerBase
+- NotificationContainer
 
-Esses componentes devem ser **agnósticos de domínio**.
-
----
-
-# Motion e Interações
-
-A aplicação utiliza:
-
-- Framer Motion
-
-Objetivos:
-
-- animações suaves
-- feedback visual claro
-- sensação de interface premium
-
-Motion deve ser **subtil e funcional**, nunca distrativo.
+These components must be **domain-agnostic**.
 
 ---
 
-# State Management
+# Notification System
 
-A aplicação utiliza:
+User feedback uses **toast notifications**.
 
-Zustand
+- `notification.store.ts` — state and actions
+- `NotificationContainer.tsx` — rendering
 
-Stores principais:
+Types: `success`, `warning`, `error`, `info`
 
-auth.store
-debtPlans.store
-investments.store
-monthlyRecords.store
-ui.store
-
-Cada store representa **um domínio de estado da aplicação**.
+**This is the established standard. Do not introduce alternatives.**
 
 ---
 
-# Integração com Backend
+# Motion and Interactions
 
-O backend planeado utiliza:
+The application uses **Framer Motion**.
 
-- Supabase
-- PostgreSQL
-- Row Level Security
-- Supabase Auth
+Goals:
 
-Responsabilidades:
+- smooth animations
+- clear visual feedback
+- premium interface feel
 
-- Services acessam Supabase
-- Stores coordenam as chamadas
-- UI consome apenas estado
+Established use cases:
 
-A UI **não conhece Supabase diretamente**.
+- page transitions
+- toast notification animations
+- UI feedback
 
----
-
-# Princípios Arquiteturais
-
-A IA deve sempre respeitar os seguintes princípios:
-
-1. UI não contém lógica de negócio
-2. UI não acessa APIs diretamente
-3. Stores coordenam estado
-4. Services acessam dados
-5. Features isolam domínios
-6. Shared UI contém componentes genéricos
+Motion must be **subtle and functional**, never distracting.
 
 ---
 
-# Mudanças Arquiteturais
+# Multi-User Security
 
-Agents **não devem alterar a arquitetura da aplicação sem pedido explícito**.
+Critical pattern — implemented and audited:
 
-Mudanças estruturais só devem ocorrer quando solicitadas diretamente.
+1. RLS on all tables (`auth.uid() = user_id`)
+2. Services apply `.eq('user_id', userId)` on every query
+3. All stores call `reset()` on logout and auth state change
+
+**These patterns must not be removed or weakened.**
 
 ---
 
-# Objetivo do Brain Map
+# Architectural Principles
 
-Este documento permite que ferramentas de IA:
+AI tools must always respect the following principles:
 
-- compreendam rapidamente a estrutura do projeto
-- implementem funcionalidades no local correto
-- respeitem a separação de responsabilidades
-- preservem consistência arquitetural
+1. UI does not contain business logic
+2. UI does not access Supabase directly
+3. Stores coordinate state and reset on logout
+4. Services access data and apply mappers
+5. Mappers are the only format conversion layer
+6. Features isolate domains
+7. Shared UI contains generic components
+
+---
+
+# Architectural Changes
+
+Agents **must not change the application architecture without explicit request**.
+
+Structural changes must only occur when directly instructed.
+
+---
+
+# Brain Map Goal
+
+This document allows AI tools to:
+
+- quickly understand the project structure
+- implement features in the correct location
+- respect separation of responsibilities
+- preserve architectural consistency
+- protect the established security patterns

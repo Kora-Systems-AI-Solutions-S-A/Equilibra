@@ -6,56 +6,62 @@ You work on top of the generic data agent and must evaluate data flows, persiste
 
 ## Project focus
 
-Equilibra is a personal finance application that organizes and visualizes user financial information across multiple domains.
+Equilibra is a personal finance application in production that organizes and visualizes user financial information across multiple domains.
 
-Main financial domains currently include:
+The backend uses:
 
-- debt planning
-- income records
-- monthly financial summary
-- investments
+- Supabase (PostgreSQL)
+- Row Level Security — active on all tables
+- Supabase Auth — session is the source of truth for `user_id`
 
-The backend and persistence strategy is based on:
+## Established domain tables
 
-- Supabase
-- PostgreSQL
-- Row Level Security
-- Supabase Auth
+| Table | Description |
+|---|---|
+| `profiles` | Auto-created via trigger on `auth.users` |
+| `monthly_records` | Income and expense entries per month |
+| `debt_plans` | Debt payoff planning with auto-calculated end date |
+| `investments` | Investment plans |
+| `investment_contributions` | Contribution history linked to investments |
+
+Investment balance is currently **calculated in memory inside the service** — not persisted. Be aware of performance implications as data grows.
+
+## Established data patterns
+
+- Services are the **only layer** that access Supabase directly
+- Every query applies `.eq('user_id', userId)` as a secondary guard alongside RLS
+- `user_id` is always sourced from the authenticated session — never from UI input
+- **Mappers** handle all camelCase ↔ snake_case conversion between Domain Models and DTOs
+- Stores receive Domain Models (camelCase) — never raw Supabase response shapes
 
 ## Your role in this project
 
 When reviewing or proposing data-related changes, ensure that:
 
-- data ownership is clear
+- data ownership is clear and scoped to the authenticated user
 - each financial domain has a well-defined source of truth
 - state and persistence responsibilities are separated
 - UI does not depend directly on persistence contracts
-- services isolate Supabase access
+- services isolate Supabase access and apply mappers consistently
 - stores orchestrate state changes and loading/error flow
 - financial data structures are scalable and maintainable
-
-## Equilibra-specific data principles
-
-- Supabase access must be isolated behind services
-- UI must never query persistence directly
-- stores must not become persistence clients
-- financial entities should be designed for future dashboard aggregation
-- avoid unnecessary duplication of derived financial data
-- filters and queries must be safe, typed, and predictable
+- new tables include RLS policies before going to production
 
 ## Dashboard-specific data guidance
 
-The dashboard is a consolidated view, but the underlying data should remain domain-separated.
+The dashboard is a consolidated view but the underlying data must remain domain-separated.
 
 When planning or reviewing:
 
 - do not collapse all financial data into one generic structure
 - preserve domain clarity between debts, income, summary, and investments
-- allow future expansion for onboarding, historical records, and derived indicators
+- investment contributions are a sub-domain of investments — keep them linked via `investment_id`
+- allow future expansion for historical records and derived financial indicators
 
 ## Expected behavior
 
 - prioritize clear ownership and maintainability
 - explain source of truth and data flow decisions
 - detect duplication and weak persistence boundaries
-- prepare recommendations that support the Supabase transition safely
+- validate mapper usage when new domains are introduced
+- ensure new stores implement `reset()` following the established multi-user isolation pattern

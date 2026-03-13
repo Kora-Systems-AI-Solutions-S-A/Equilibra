@@ -1,26 +1,42 @@
 # Project Context — Equilibra
 
-## Visão Geral
+## Overview
 
-Equilibra é uma aplicação de **gestão financeira pessoal moderna**, focada em:
+Equilibra is a modern **personal finance management application**, focused on:
 
-- clareza financeira
-- organização de receitas e despesas
-- gestão de dívidas
-- acompanhamento de evolução financeira
-- visualização de dados através de dashboards
+- financial clarity
+- income and expense organization
+- debt management
+- financial growth tracking
+- data visualization through dashboards
 
-A aplicação foi projetada com foco em:
+The application is designed with a focus on:
 
-- simplicidade de uso
-- visual premium
-- decisões financeiras conscientes
+- ease of use
+- premium visual experience
+- conscious financial decision-making
 
-O objetivo é fornecer ao utilizador **controlo total da sua vida financeira num único lugar**.
+The goal is to give users **full control of their financial life in one place**.
 
 ---
 
-# Stack Tecnológica
+# Current Project Status
+
+The project is **in production**, deployed on Vercel.
+
+Current state:
+
+- Supabase fully integrated
+- Real authentication via Supabase Auth
+- Real persistence on PostgreSQL
+- RLS active on all tables
+- Deployed on Vercel
+- Feature complete and audited
+- Polished UX with empty states, toast notifications, and mobile fixes
+
+---
+
+# Tech Stack
 
 ## Frontend
 
@@ -28,130 +44,92 @@ O objetivo é fornecer ao utilizador **controlo total da sua vida financeira num
 - TypeScript
 - Vite
 - Zustand (state management)
-- Framer Motion (animações)
-- CSS modular
-- Design system interno
+- Framer Motion (animations)
+- Tailwind CSS
+- Internal design system
+
+## Backend / Infra
+
+- Supabase (PostgreSQL + Auth + RLS)
+- Vercel (deployment)
+
+## Environment Variables
+
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
 
 ---
 
-## Backend (Planeado)
+# Application Architecture
 
-Inicialmente a aplicação utiliza **mocks locais e services internos**.
+The project follows an architecture based on:
 
-A próxima etapa será integração com:
+**features + separated layers + centralized infrastructure**
 
-Supabase
+Main project structure:
 
-Supabase fornecerá:
-
-- autenticação
-- base de dados PostgreSQL
-- Row Level Security (RLS)
-- storage
-- funções server-side
-- API segura para persistência de dados financeiros
-
----
-
-# Arquitetura da Aplicação
-
-O projeto segue uma arquitetura baseada em:
-
-**features + camadas separadas + infraestrutura centralizada**
-
-Essa abordagem permite:
-
-- modularidade
-- baixo acoplamento
-- evolução segura do código
-- facilidade de manutenção
-
-Estrutura principal do projeto:
+```
 src/
 │
 ├─ assets/
-│ Imagens e arquivos estáticos
+│  Static images and files
 │
 ├─ core/
-│ Infraestrutura técnica da aplicação
-│
-│ ├─ api/
-│ │ Cliente HTTP central e tratamento de erros
-│ │
-│ ├─ config/
-│ │ Configurações globais da aplicação
-│ │
-│ └─ supabase/
-│ Cliente e configuração da integração com Supabase
+│  Technical infrastructure
+│  ├─ api/        Central HTTP client and error handling
+│  ├─ config/     Global configuration
+│  └─ supabase/   Supabase client
 │
 ├─ features/
-│ Módulos funcionais da aplicação
+│  Functional application modules
 │
 ├─ helpers/
-│ Funções utilitárias específicas da aplicação
+│  Application-specific utility functions
 │
 ├─ hooks/
-│ Hooks reutilizáveis
+│  Reusable hooks
 │
 ├─ lib/
-│ Utilidades de baixo nível
+│  Low-level utilities
 │
 ├─ mappers/
-│ Conversão entre DTOs e modelos internos
+│  Conversion between DTOs (snake_case) and Domain Models (camelCase)
 │
 ├─ models/
-│ Tipos e contratos de dados
+│  Types and data contracts
 │
 ├─ pages/
-│ Páginas principais que orquestram as features
+│  Main pages that orchestrate features
 │
 ├─ services/
-│ Camada responsável por acesso a dados e lógica de integração
+│  Data access layer — Supabase integration
 │
 ├─ shared/
-│ Componentes reutilizáveis e design system
+│  Reusable components and design system
 │
-├─ store/
-│ Estado global da aplicação (Zustand)
-└─
+└─ store/
+   Global application state (Zustand)
+```
 
 ---
 
-# Infraestrutura Core
-
-A pasta `core` contém infraestrutura técnica reutilizável.
-
-Essa camada centraliza integrações externas e evita dependência direta entre features e bibliotecas externas.
-
-Exemplos de responsabilidades:
-
-- cliente HTTP
-- tratamento de erros
-- configuração global
-- cliente Supabase
-- infraestrutura de comunicação com APIs
-
-Isso garante que features permaneçam desacopladas da infraestrutura.
-
----
-
-# Responsabilidades das Camadas
+# Layer Responsibilities
 
 ## features
 
-Contém **módulos funcionais da aplicação**.
+Contains **functional application modules**.
 
-Cada feature agrupa componentes e lógica relacionada a uma funcionalidade específica.
-
-Exemplos:
+Examples:
 
 - auth
 - dashboard
-- investimentos
-- planejamento de dívidas
-- resumo mensal
+- investments
+- debt planning
+- monthly summary
 
-Features podem conter:
+Features may contain:
 
 - components
 - modals
@@ -162,33 +140,27 @@ Features podem conter:
 
 ## pages
 
-Define **páginas principais da aplicação**.
+Defines **main application pages**.
 
-Exemplos:
+Examples:
 
 - AuthPage
 - DashboardPage
 
-Pages são responsáveis por:
+Pages are responsible for:
 
-- composição de layout
-- orquestração de features
+- layout composition
+- feature orchestration
 
-Pages **não devem conter lógica de negócio**.
+Pages **must not contain business logic**.
 
 ---
 
 ## shared
 
-Contém **componentes reutilizáveis entre features**.
+Contains **reusable components across features**.
 
-Estrutura atual inclui:
-
-- layout
-- ui components
-- componentes base reutilizáveis
-
-Exemplos:
+Examples:
 
 - Button
 - Drawer
@@ -196,253 +168,200 @@ Exemplos:
 - Tooltip
 - MoneyInput
 - LoadingOverlay
+- NotificationContainer
 
-Essa camada funciona como **design system interno da aplicação**.
+This layer acts as the **internal design system of the application**.
 
 ---
 
 ## services
 
-Responsável por:
+Responsible for:
 
-- acesso a dados
-- chamadas de API
-- integração com Supabase
-- comunicação com camada core/api
+- data access via Supabase
+- safe and parameterized queries
+- applying `.eq('user_id', userId)` on every query
+- using mappers to convert DTOs to Domain Models and vice versa
 
-Services encapsulam regras de acesso a dados.
-
-A UI **nunca acessa dados diretamente**.
-
----
-
-## store
-
-Gerencia estado global da aplicação usando **Zustand**.
-
-Responsável por:
-
-- estado de autenticação
-- estado da interface
-- loading global
-- estado das features
-
-Stores coordenam fluxo entre UI e services.
-
----
-
-## hooks
-
-Hooks reutilizáveis da aplicação.
-
-Utilizados para encapsular lógica reutilizável.
-
----
-
-## helpers
-
-Funções utilitárias específicas da aplicação.
-
-Podem incluir:
-
-- cálculos financeiros
-- transformações simples
-- lógica utilitária local
-
----
-
-## lib
-
-Contém utilidades genéricas de baixo nível.
-
-Exemplos:
-
-- formatadores
-- utilitários genéricos
-- funções auxiliares independentes
+The UI **never accesses Supabase directly**.
 
 ---
 
 ## mappers
 
-Responsável por converter entre:
+Responsible for converting between:
 
-- DTOs
-- modelos internos
-- formatos de API
+- Domain Models (camelCase) — used in UI and stores
+- DTOs (snake_case) — used in Supabase queries
 
----
-
-## models
-
-Definições de tipos e contratos de dados utilizados na aplicação.
+This is the **only layer** where camelCase ↔ snake_case conversion occurs.
 
 ---
 
-# Fluxo de Dados
+## store
 
-O fluxo correto de dados na aplicação é:
+Manages global application state using **Zustand**.
 
-UI  
-↓  
-Feature Components  
-↓  
-Store  
-↓  
-Services  
-↓  
-Core API / Supabase Client  
-↓  
-Backend
+Main stores:
 
-A UI **nunca deve acessar diretamente APIs ou Supabase**.
+- `auth.store` — authentication and session
+- `monthlyRecords.store` — income and expenses
+- `debtPlans.store` — debt planning
+- `investments.store` — investments
+- `notification.store` — toast notification system
+
+All stores implement `reset()` and are cleared on logout and auth state change to prevent dirty state between users.
 
 ---
 
-# Autenticação
+## Notification System
 
-Autenticação será gerenciada por:
+User feedback uses the **toast notification system**.
 
-Supabase Auth
+Files:
 
-O frontend utilizará:
+- `notification.store.ts`
+- `NotificationContainer.tsx`
 
-- sessões seguras
-- tokens gerenciados automaticamente
-- autenticação persistente
-- acesso seguro às tabelas via RLS
+Supported types: `success`, `warning`, `error`, `info`
 
----
-
-# Segurança
-
-Dados do utilizador **não devem ser expostos na UI ou em payloads inseguros**.
-
-A aplicação deve garantir:
-
-- isolamento de dados por utilizador
-- queries filtradas por usuário autenticado
-- nenhuma exposição de identificadores sensíveis
-- proteção contra SQL injection
-- proteção contra prompt injection em conteúdo dinâmico
+**This is the established standard for user feedback. Do not introduce alternatives.**
 
 ---
 
-# Camada Intermédia (Planeada)
+# Data Domains
 
-Futuramente será adicionada uma camada intermédia entre:
+Supabase tables:
 
-Frontend  
-e  
-Supabase
+| Table | Description |
+|---|---|
+| `profiles` | Auto-created via trigger on `auth.users` |
+| `monthly_records` | Monthly income and expense entries |
+| `debt_plans` | Debt payoff planning with auto-calculated end date |
+| `investments` | Investment plans |
+| `investment_contributions` | Contribution history linked to investments |
 
-Objetivo:
-
-- remover regras de negócio do frontend
-- centralizar lógica de dados
-- permitir evolução futura da arquitetura
-- facilitar validações e segurança
-
----
-
-# Padrões de UI
-
-A interface segue princípios de design:
-
-- visual premium
-- minimalismo
-- consistência
-- animações suaves
-
-Cores principais da aplicação:
-
-- grafite
-- verde
-
-Layout responsivo deve suportar:
-
-- desktop
-- tablet
-- mobile
+RLS active on all tables with policy `auth.uid() = user_id`.
 
 ---
 
-# Estrutura do Dashboard
+# Security
 
-O dashboard apresenta:
+Security enforced at multiple layers:
 
-- planejamento de dívidas
-- entradas de renda
-- resumo mensal
-- investimentos
+1. **RLS (Supabase)** — `auth.uid() = user_id` on all tables
+2. **Service Layer** — `.eq('user_id', userId)` on every query
+3. **Auth Session** — `user_id` always comes from the authenticated session, never from the UI
 
-Os componentes são organizados por feature dentro da pasta `features/dashboard`.
+All stores call `reset()` on logout and on auth state change.
 
----
-
-# Regras de Implementação
-
-Agents devem respeitar as seguintes regras fundamentais:
-
-1. Nunca alterar arquitetura sem pedido explícito
-2. Não mover arquivos entre pastas sem autorização
-3. Não duplicar componentes existentes
-4. Não quebrar imports existentes
-5. Não introduzir lógica de negócio na UI
-6. Utilizar alias de imports
-
-Alias padrão:
-@/
-
-Exemplo de import correto:
-@/features/dashboard/components/InvestmentsCard
-
+A dirty state vulnerability between users was identified, fixed, and audited. These correction patterns **must not be removed**.
 
 ---
 
-# Qualidade de Código
+# Data Flow
 
-O código deve priorizar:
+```
+UI Component
+    ↓ dispatches action
+Zustand Store
+    ↓ calls service
+Service Layer (applies mapper + user_id filter)
+    ↓
+Supabase (PostgreSQL + RLS)
+```
 
-- legibilidade
-- modularidade
-- responsabilidade única
-- baixo acoplamento
-- reutilização de componentes
-
-Refatorações devem preservar comportamento existente.
-
----
-
-# Estado Atual do Projeto
-
-O projeto atualmente possui:
-
-- autenticação mockada
-- dashboard funcional
-- estrutura modular
-- loading overlay global
-- sidebar interativa
-- design system inicial
+The UI **must never access APIs or Supabase directly**.
 
 ---
 
-# Próximas Etapas
+# Authentication
 
-1. Integração com Supabase
-2. Persistência real de dados
-3. PWA
-4. onboarding do utilizador
-5. melhorias de UX
+Managed by **Supabase Auth**.
+
+- Secure sessions with automatically managed tokens
+- Persistent authentication
+- Secure table access via RLS
+- Auth state change listener clears all stores
 
 ---
 
-# Objetivo do Sistema Antigravity
+# UI Standards
 
-Os agents e skills existem para garantir que:
+The interface follows design principles:
 
-- novas funcionalidades respeitem a arquitetura
-- o código permaneça organizado
-- decisões técnicas sejam consistentes
-- segurança seja preservada
-- o projeto possa evoluir com estabilidade
+- premium dark visual
+- minimalism
+- consistency
+- smooth animations via Framer Motion
+
+Main colors: graphite and green
+
+Responsive layout supports: desktop, tablet, mobile
+
+Empty states implemented across all dashboard sections.
+
+---
+
+# Dashboard Structure
+
+The dashboard presents independent cards per financial domain:
+
+- Debt Planning
+- Income
+- Monthly Summary
+- Investments
+
+Components are organized by feature inside `features/dashboard`.
+
+---
+
+# Current Backlog
+
+| Item | Area |
+|---|---|
+| Google Login | Auth |
+| Bottom Navigation | Mobile UX |
+| Investment balance view | Data Layer |
+| Supabase migration versioning | Infra |
+
+---
+
+# Implementation Rules
+
+Agents must follow these core rules:
+
+1. Never change architecture without explicit request
+2. Do not move files between folders without authorization
+3. Do not duplicate existing components
+4. Do not break existing imports
+5. Do not introduce business logic in the UI
+6. Use import aliases (`@/`)
+7. Never remove multi-user isolation patterns
+8. Always use the toast system for user feedback
+
+---
+
+# Code Quality
+
+Code must prioritize:
+
+- readability
+- modularity
+- single responsibility
+- low coupling
+- component reuse
+
+Refactors must preserve existing behavior and security patterns.
+
+---
+
+# Antigravity System Goal
+
+Agents and skills exist to ensure that:
+
+- new features respect the architecture
+- code remains organized
+- technical decisions are consistent
+- security is preserved
+- the project can evolve with stability

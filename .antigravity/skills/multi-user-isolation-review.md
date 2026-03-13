@@ -1,15 +1,28 @@
-# Multi User Isolation Review
+# Skill: Multi User Isolation Review
 
-This skill defines rules for auditing **data isolation and session safety** in applications that support multiple authenticated users.
+This skill audits **data isolation and session safety** in applications that support multiple authenticated users.
 
 The objective is to ensure that:
+- Users cannot access or modify other users' data
+- Sessions are isolated at all layers
+- Frontend state does not leak across users
+- Backend queries always enforce ownership
 
-- users cannot access or modify other users’ data
-- sessions are isolated
-- frontend state does not leak across users
-- backend queries always enforce ownership
+This review is critical for **multi-tenant SaaS applications**.
 
-This review is essential for **multi-tenant SaaS applications**.
+---
+
+## Project Context
+
+The following isolation patterns are already established and must be preserved:
+
+- **RLS** enabled on all tables with `auth.uid() = user_id` policies
+- **Service layer** applies `.eq('user_id', userId)` on every query as a secondary guard
+- **All Zustand stores** call `reset()` on logout and on auth state change
+- **Auth state change listener** triggers store cleanup to prevent dirty state between users
+- `user_id` is always sourced from the authenticated session — never from UI input
+
+These patterns were specifically implemented to fix a multi-user dirty state vulnerability. Never remove or weaken them.
 
 ---
 
@@ -17,16 +30,16 @@ This review is essential for **multi-tenant SaaS applications**.
 
 Every data access must be scoped to the authenticated user.
 
-The system must guarantee that:
+Check that:
+- Queries filter by `user_id`
+- Inserts always attach the correct `user_id` from the auth session
+- Updates cannot affect rows owned by other users
+- Deletes respect ownership constraints
 
-- queries filter by `user_id`
-- inserts always attach the correct `user_id`
-- updates cannot affect rows owned by other users
-- deletes respect ownership constraints
-
-Safe pattern example:
-
+Safe pattern:
+```sql
 where user_id = auth.uid()
+```
 
 Never rely solely on the frontend to enforce user isolation.
 
@@ -34,19 +47,14 @@ Never rely solely on the frontend to enforce user isolation.
 
 # Supabase RLS Enforcement
 
-Verify that Row Level Security (RLS) is correctly configured.
+Verify that Row Level Security is correctly configured.
 
 Each table containing user data must:
+- Have RLS enabled
+- Contain policies scoped by `auth.uid()`
+- Prevent cross-user reads and writes
 
-- have RLS enabled
-- contain policies scoped by `auth.uid()`
-- prevent cross-user reads and writes
-
-Example policy pattern:
-
-using (auth.uid() = user_id)
-
-Also verify that services do not attempt to bypass RLS.
+Also verify that new tables added to the project include RLS policies before going to production.
 
 ---
 
@@ -55,12 +63,9 @@ Also verify that services do not attempt to bypass RLS.
 Ensure the authenticated session is the **single source of truth**.
 
 Check that:
-
-- services retrieve the user id from the auth session
-- the frontend does not manually inject user identifiers
-- requests cannot impersonate another user
-
-Avoid patterns where the UI supplies the user id directly.
+- Services retrieve `user_id` from the auth session
+- The frontend does not manually inject user identifiers
+- Requests cannot impersonate another user
 
 ---
 
@@ -69,13 +74,13 @@ Avoid patterns where the UI supplies the user id directly.
 Frontend state must reset correctly when sessions change.
 
 Check that:
+- All stores call `reset()` on logout
+- All stores call `reset()` on auth state change
+- Login with a different user does not reuse previous user's state
+- Cached records do not persist across sessions
+- Session rehydration does not mix data between users
 
-- stores clear user data on logout
-- login with a different user does not reuse previous state
-- cached records do not persist across sessions
-- session rehydration does not mix data between users
-
-Stores should always reload data after authentication changes.
+This is a critical pattern — verify it is preserved in all stores including any newly created ones.
 
 ---
 
@@ -84,79 +89,62 @@ Stores should always reload data after authentication changes.
 Verify correct behaviour when multiple browser tabs are open.
 
 Check for:
-
-- session synchronization issues
-- stale data after login/logout in another tab
-- duplicated listeners reacting incorrectly to auth changes
-
-Applications must remain consistent across tabs.
+- Session synchronization issues across tabs
+- Stale data after login/logout in another tab
+- Duplicated auth listeners reacting incorrectly
 
 ---
 
 # Race Conditions
 
-Identify race conditions involving user sessions.
-
-Examples:
-
-- requests finishing after logout
-- state updates applied to a new session
-- concurrent actions affecting the same records
-
-Ensure that state updates validate the active user session.
+Identify race conditions involving user sessions:
+- Requests finishing after logout and applying state to a new session
+- State updates applied under the wrong user context
+- Concurrent actions affecting the same records
 
 ---
 
 # Service Layer Protection
 
-All database access must flow through the service layer.
+All database access must flow through the service layer:
 
-Architecture must follow:
-
-UI
-↓
-Store
-↓
-Service
-↓
-Database
+```
+UI → Store → Service → Database
+```
 
 Avoid:
-- direct database calls in UI components
-- services trusting client-provided identifiers
-- authorization logic implemented only in the frontend
+- Direct database calls in UI components
+- Services trusting client-provided identifiers
+- Authorization logic implemented only in the frontend
+
 ---
+
 # Security Severity Classification
 
-Issues should be categorized as:
-
 **Critical**
-
-- cross-user data exposure
-- broken RLS policies
-- services trusting external user ids
+- Cross-user data exposure
+- Broken RLS policies
+- Services trusting external user ids
+- Stores not resetting on logout
 
 **High**
-
-- session state leaking between users
-- requests executing under incorrect session
+- Session state leaking between users
+- Requests executing under incorrect session
+- New stores missing `reset()` implementation
 
 **Medium**
-
-- stale cache after login/logout
-- inconsistent multi-tab behaviour
+- Stale cache after login/logout
+- Inconsistent multi-tab behaviour
 
 **Low**
-
-- minor session handling improvements
+- Minor session handling improvements
 
 ---
 
 # Expected Outcome
 
-The system should guarantee that:
-
-- each user only accesses their own data
-- sessions remain isolated
-- state transitions are safe
-- backend policies enforce ownership
+The system must guarantee that:
+- Each user only accesses their own data
+- Sessions remain isolated at all layers
+- State transitions are safe and clean
+- Backend policies enforce ownership independently of the frontend

@@ -69,6 +69,8 @@ Responsible for:
 - respecting the design system
 - visual consistency
 - integration with state management
+- Framer Motion animations
+- toast notification patterns
 
 ---
 
@@ -78,11 +80,12 @@ Specialized in **data flow and persistence**.
 
 Responsible for:
 
-- API integration
-- data modeling
+- Supabase integration and query safety
+- data modeling and schema design
 - separation between UI and data layer
 - validating data flow consistency
-- verifying query safety and correctness
+- mapper contracts (camelCase ↔ snake_case)
+- RLS policy validation
 
 ---
 
@@ -97,7 +100,7 @@ Focuses on:
 - improving readability
 - safely reorganizing code
 
-Without changing functional behaviour.
+Without changing functional behaviour or security patterns.
 
 ---
 
@@ -112,6 +115,7 @@ Analyzes:
 - responsiveness
 - animations and transitions
 - interaction clarity
+- empty states and user feedback
 
 ---
 
@@ -146,6 +150,8 @@ Ensures:
 - reusable components
 - separation between layout and logic
 - predictable component structure
+- empty states handled explicitly
+- toast system used for all user feedback
 
 ---
 
@@ -158,7 +164,7 @@ Defines the correct separation between:
 - services
 - data layer
 
-Prevents mixing responsibilities across layers.
+Validates mapper contracts and prevents mixing responsibilities across layers.
 
 ---
 
@@ -166,13 +172,13 @@ Prevents mixing responsibilities across layers.
 
 Evaluates how the application behaves across different screen sizes.
 
-Ensures visual consistency and readability.
+Ensures visual consistency, readability, and correct layout behavior at all breakpoints.
 
 ---
 
 ## motion-review
 
-Analyzes UI animations and transitions.
+Analyzes UI animations and transitions using Framer Motion.
 
 Checks:
 
@@ -182,7 +188,7 @@ Checks:
 
 ---
 
-## security-boundary-review
+## security-review
 
 Reviews application security boundaries.
 
@@ -190,13 +196,14 @@ Prevents:
 
 - sensitive data exposure
 - unsafe queries
-- trusting unvalidated external data
+- missing RLS policies
+- `user_id` sourced from UI instead of auth session
 
 ---
 
-## load-and-security-review
+## load-review
 
-Performs a **combined security and performance audit**.
+Performs a **performance and request load audit**.
 
 Focuses on:
 
@@ -205,9 +212,6 @@ Focuses on:
 - race conditions
 - performance bottlenecks
 - incorrect request patterns
-- weak security boundaries
-
-Helps detect issues that could impact **scalability or stability**.
 
 ---
 
@@ -218,7 +222,7 @@ Audits **multi-user safety and tenant isolation**.
 Ensures:
 
 - user data cannot leak between sessions
-- stores do not retain data after logout
+- stores reset correctly on logout and auth state change
 - services properly scope queries by user
 - session transitions are safe
 - multiple browser tabs remain consistent
@@ -254,6 +258,7 @@ Inside this folder live:
 - architectural rules
 - project-specific agents
 - domain-specific skills
+- brain-map.md
 
 This separation allows the AI layer to be reused across different projects.
 

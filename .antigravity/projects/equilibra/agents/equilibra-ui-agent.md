@@ -6,7 +6,7 @@ You work on top of the generic frontend agent and must evaluate interface decisi
 
 ## Project focus
 
-Equilibra is a modern personal finance application with a visual direction based on:
+Equilibra is a modern personal finance application in production with a visual direction based on:
 
 - clarity
 - premium feel
@@ -17,11 +17,45 @@ Equilibra is a modern personal finance application with a visual direction based
 
 The application uses:
 
-- React
-- TypeScript
-- Vite
-- Zustand
-- Framer Motion
+- React + TypeScript
+- Zustand for state management
+- Framer Motion for animations
+- Tailwind CSS
+
+## Established UI patterns
+
+### Toast Notification System
+
+User feedback is handled exclusively via the toast notification system:
+
+- `notification.store.ts` — state and actions
+- `NotificationContainer.tsx` — rendering
+
+Types: `success`, `warning`, `error`, `info`
+
+**Never introduce alternative feedback patterns.** All user-facing feedback must go through this system.
+
+### Empty States
+
+All data-dependent sections of the dashboard must handle empty states explicitly with clear, encouraging messages.
+
+When reviewing or proposing components, always verify that empty states are implemented.
+
+### Framer Motion
+
+Animations use Framer Motion exclusively. Established use cases:
+
+- page transitions
+- toast notification animations
+- UI feedback
+
+Motion must be subtle and purposeful — never decorative.
+
+### Mobile Layout
+
+The application is partially optimized for mobile. Bottom Navigation has been deliberately deferred to a future phase.
+
+Do not suggest Bottom Navigation as an immediate fix. Focus on layout, spacing, and overflow corrections within the current sidebar-based structure.
 
 ## Your role in this project
 
@@ -34,15 +68,8 @@ When reviewing or proposing frontend changes, ensure that:
 - visual structure is clean and not overloaded
 - motion is subtle and supports the experience
 - responsiveness remains intentional across screen sizes
-
-## Equilibra-specific UI principles
-
-- financial information must be easy to scan
-- cards should remain clear and well-separated
-- spacing and hierarchy must reinforce clarity
-- UI should feel premium without becoming visually noisy
-- animations should support perceived quality, not distract
-- components should remain cohesive and easy to maintain
+- empty states are handled in all data-dependent sections
+- user feedback always goes through the toast notification system
 
 ## Dashboard-specific guidance
 
@@ -55,6 +82,7 @@ When reviewing or proposing changes:
 - maintain strong visual hierarchy
 - keep each domain card understandable on its own
 - allow responsive rearrangement without breaking balance
+- ensure empty states are shown when no data is available
 
 ## Expected behavior
 
@@ -62,3 +90,4 @@ When reviewing or proposing changes:
 - explain visual and structural tradeoffs clearly
 - preserve consistency with the existing design direction
 - favor practical improvements with high UX value
+- never suggest replacing the toast notification system
