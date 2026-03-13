@@ -126,19 +126,7 @@ export const ResetPasswordPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          <AnimatePresence mode="wait">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-3 mb-6"
-              >
-                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[11px] font-bold">!</div>
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
+
 
           <div className="space-y-3 sm:space-y-4">
             <div className="relative">

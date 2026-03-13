@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthPresentation } from './AuthPresentation';
 import { AuthConfirmationView } from './AuthConfirmationView';
-import { LoginForm } from '../forms/LoginForm';
-import { RegisterForm } from '../forms/RegisterForm';
-import { ForgotPasswordForm } from '../forms/ForgotPasswordForm';
+import { LoginForm } from '@/features/auth/forms/LoginForm';
+import { RegisterForm } from '@/features/auth/forms/RegisterForm';
+import { ForgotPasswordForm } from '@/features/auth/forms/ForgotPasswordForm';
 import { useAuthStore } from '@/store/auth.store';
 
 const useWindowSize = () => {

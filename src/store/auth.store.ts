@@ -237,7 +237,7 @@ export const initializeAuthListener = () => {
         isInitialized: true,
         isLoading: false,
         lastRegisteredEmail: null,
-        authStep: useAuthStore.getState().authStep === 'email-validated' ? 'email-validated' : 'form',
+        authStep: ['email-validated', 'password-reset-success'].includes(useAuthStore.getState().authStep) ? useAuthStore.getState().authStep : 'form',
       });
     }
   });
