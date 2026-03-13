@@ -84,4 +84,23 @@ export const authService = {
       accessToken: data.session.access_token,
     };
   },
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    // Ignoramos o erro propositalmente — nunca revelamos se o email existe ou não.
+    // Esta é uma medida de segurança contra a enumeração de emails (user enumeration).
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+  },
+
+  async updatePassword(password: string): Promise<void> {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      // Mapeamos os erros do Supabase para mensagens claras e sem detalhes técnicos
+      if (error.message.toLowerCase().includes('expired') || error.message.toLowerCase().includes('invalid')) {
+        throw new Error('Link de recuperação inválido ou expirado. Solicita um novo.');
+      }
+      throw new Error('Erro ao actualizar a palavra-passe. Tenta novamente.');
+    }
+  },
 };

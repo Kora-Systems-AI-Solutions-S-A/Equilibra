@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/Button';
 import { FloatingLabelInput } from '@/shared/ui/FloatingLabelInput';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,15 +7,26 @@ import { useUIStore } from '@/store/ui.store';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 interface LoginFormProps {
-  onToggleMode: () => void;
+  onToggleMode: (mode: 'login' | 'register' | 'forgot-password') => void;
+  mode: 'login' | 'register' | 'forgot-password';
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, mode }) => {
   const { login, loginWithGoogle, error, clearError } = useAuthStore();
   const { setPageTransitionLoading } = useUIStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Limpa o formulário ao alternar entre Login e Cadastro
+  useEffect(() => {
+    if (mode !== 'login') {
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      clearError();
+    }
+  }, [mode, clearError]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +138,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
             </div>
             <span className="text-[12px] sm:text-[13px] text-slate-400 group-hover:text-slate-300 transition-colors font-medium">Lembrar de mim</span>
           </label>
-          <a href="#" className="text-[12px] sm:text-[13px] font-bold text-primary/80 hover:text-white transition-colors">Esqueci a palavra-passe</a>
+          <button type="button" onClick={() => onToggleMode('forgot-password')} className="text-[12px] sm:text-[13px] font-bold text-primary/80 hover:text-white transition-colors">Esqueci a palavra-passe</button>
         </div>
 
         <div className="space-y-3 sm:space-y-4 pt-2">
@@ -161,7 +172,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
         </div>
 
         <p className="text-center text-[13px] text-slate-500 pt-4 font-medium">
-          Ainda não tem conta? <button type="button" onClick={onToggleMode} className="font-bold text-primary/80 hover:text-white transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary">Criar conta</button>
+          Ainda não tem conta? <button type="button" onClick={() => onToggleMode('register')} className="font-bold text-primary/80 hover:text-white transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary">Criar conta</button>
         </p>
       </form>
     </div>

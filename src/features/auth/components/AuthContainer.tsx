@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { AuthPresentation } from './AuthPresentation';
 import { LoginForm } from '../forms/LoginForm';
 import { RegisterForm } from '../forms/RegisterForm';
+import { ForgotPasswordForm } from '../forms/ForgotPasswordForm';
 
 const useWindowSize = () => {
   const [windowSize, setWindowSize] = useState({
@@ -26,12 +27,12 @@ const useWindowSize = () => {
 };
 
 export const AuthContainer = () => {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>('login');
   const { width } = useWindowSize();
   const isMobile = width < 768;
 
-  const toggleMode = () => {
-    setMode(prev => prev === 'login' ? 'register' : 'login');
+  const toggleMode = (newMode: 'login' | 'register' | 'forgot-password') => {
+    setMode(newMode);
   };
 
   return (
@@ -86,7 +87,7 @@ export const AuthContainer = () => {
           transition={{ duration: 0.85, ease: [0.32, 0.72, 0, 1] }}
           className="absolute inset-y-0 flex flex-col items-center justify-center p-6 md:p-12"
         >
-          <LoginForm onToggleMode={toggleMode} />
+          <LoginForm onToggleMode={toggleMode} mode={mode} />
         </motion.div>
 
         {/* Register Form Area */}
@@ -102,7 +103,23 @@ export const AuthContainer = () => {
           transition={{ duration: 0.85, ease: [0.32, 0.72, 0, 1] }}
           className="absolute inset-y-0 flex flex-col items-center justify-center p-6 md:p-12"
         >
-          <RegisterForm onToggleMode={toggleMode} />
+          <RegisterForm onToggleMode={toggleMode} mode={mode} />
+        </motion.div>
+
+        {/* Forgot Password Form Area */}
+        <motion.div
+          initial={false}
+          animate={{ 
+            left: '0%',
+            width: isMobile ? '100%' : '40%',
+            opacity: mode === 'forgot-password' ? 1 : 0,
+            pointerEvents: mode === 'forgot-password' ? 'auto' : 'none',
+            zIndex: mode === 'forgot-password' ? 30 : 10
+          }}
+          transition={{ duration: 0.85, ease: [0.32, 0.72, 0, 1] }}
+          className="absolute inset-y-0 flex flex-col items-center justify-center p-6 md:p-12"
+        >
+          <ForgotPasswordForm onToggleMode={toggleMode} mode={mode} />
         </motion.div>
       </motion.main>
     </div>

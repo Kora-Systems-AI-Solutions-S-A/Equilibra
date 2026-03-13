@@ -20,6 +20,8 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -114,6 +116,27 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  sendPasswordResetEmail: async (email: string) => {
+    set({ isLoading: true, error: null });
+    // Não fazemos throw — nunca revelamos se o email existe ou não (anti-enumeração)
+    await authService.sendPasswordResetEmail(email);
+    set({ isLoading: false });
+  },
+
+  updatePassword: async (password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authService.updatePassword(password);
+      set({ isLoading: false });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Erro ao atualizar senha.',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
 }));
 
 // Inicializa o listener de mudanças de sessão do Supabase.

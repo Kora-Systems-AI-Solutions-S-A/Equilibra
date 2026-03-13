@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/Button';
 import { FloatingLabelInput } from '@/shared/ui/FloatingLabelInput';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,16 +7,28 @@ import { useUIStore } from '@/store/ui.store';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 interface RegisterFormProps {
-  onToggleMode: () => void;
+  onToggleMode: (mode: 'login' | 'register' | 'forgot-password') => void;
+  mode: 'login' | 'register' | 'forgot-password';
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }) => {
   const { register, loginWithGoogle, error, clearError } = useAuthStore();
   const { setPageTransitionLoading } = useUIStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Limpa o formulário ao alternar entre Login e Cadastro
+  useEffect(() => {
+    if (mode !== 'register') {
+      setName('');
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      clearError();
+    }
+  }, [mode, clearError]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,7 +172,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
         </div>
 
         <p className="text-center text-[13px] text-slate-500 pt-4 font-medium">
-          Já tem uma conta? <button type="button" onClick={onToggleMode} className="font-bold text-primary/80 hover:text-white transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary">Fazer login</button>
+          Já tem uma conta? <button type="button" onClick={() => onToggleMode('login')} className="font-bold text-primary/80 hover:text-white transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary">Fazer login</button>
         </p>
       </form>
     </div>
