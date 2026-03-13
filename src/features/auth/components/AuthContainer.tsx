@@ -90,6 +90,15 @@ export const AuthContainer = () => {
         />
       );
     }
+    
+    if (authStep === 'password-reset-success') {
+      return (
+        <AuthConfirmationView
+          type="password-reset-success"
+          onBack={handleBackToLogin}
+        />
+      );
+    }
 
     // Formulários normais
     switch (mode) {

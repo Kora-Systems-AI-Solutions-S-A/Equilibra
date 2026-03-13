@@ -9,7 +9,7 @@ import { FloatingLabelInput } from '@/shared/ui/FloatingLabelInput';
 
 export const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const { updatePassword, isLoading, error, clearError } = useAuthStore();
+  const { updatePassword, logout, setAuthStep, isLoading, error, clearError } = useAuthStore();
   const { showNotification } = useNotificationStore();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -54,6 +54,9 @@ export const ResetPasswordPage = () => {
 
     try {
       await updatePassword(password);
+      // Limpa a sessão e define o ecrã de sucesso antes de voltar à AuthPage
+      await logout();
+      setAuthStep('password-reset-success');
       showNotification('Palavra-passe atualizada com sucesso! Por favor, faça login.', 'success');
       navigate('/');
     } catch (err: any) {

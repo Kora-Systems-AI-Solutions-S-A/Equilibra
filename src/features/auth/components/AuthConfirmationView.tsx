@@ -9,7 +9,7 @@ import { useNotificationStore } from '@/store/notification.store';
 const COOLDOWN_SECONDS = 60;
 
 interface AuthConfirmationViewProps {
-  type: 'email' | 'reset' | 'email-validated';
+  type: 'email' | 'reset' | 'email-validated' | 'password-reset-success';
   email?: string;
   onBack: () => void;
 }
@@ -40,6 +40,7 @@ export const AuthConfirmationView: React.FC<AuthConfirmationViewProps> = ({ type
 
   const isEmail = type === 'email';
   const isValidated = type === 'email-validated';
+  const isResetSuccess = type === 'password-reset-success';
   const canResend = cooldown <= 0 && !isLoading;
 
   return (
@@ -54,7 +55,7 @@ export const AuthConfirmationView: React.FC<AuthConfirmationViewProps> = ({ type
         >
           {isEmail ? (
             <Mail className="w-8 h-8 text-primary" />
-          ) : isValidated ? (
+          ) : (isValidated || isResetSuccess) ? (
             <CheckCircle className="w-8 h-8 text-primary" />
           ) : (
             <Lock className="w-8 h-8 text-primary" />
@@ -68,7 +69,13 @@ export const AuthConfirmationView: React.FC<AuthConfirmationViewProps> = ({ type
           transition={{ delay: 0.1 }}
           className="text-[24px] sm:text-[28px] leading-[1.05] font-black tracking-tight mb-3 text-white"
         >
-          {isEmail ? 'Verifique o seu email' : isValidated ? 'Conta confirmada' : 'Email enviado'}
+          {isEmail 
+            ? 'Verifique o seu email' 
+            : isResetSuccess 
+              ? 'Palavra-passe atualizada' 
+              : isValidated 
+                ? 'Conta confirmada' 
+                : 'Email enviado'}
         </motion.h2>
 
         {/* Mensagem */}
@@ -84,6 +91,12 @@ export const AuthConfirmationView: React.FC<AuthConfirmationViewProps> = ({ type
               <strong className="text-slate-300">{email}</strong>.
               <br />
               Verifique a sua caixa de entrada e clique no link para ativar a sua conta.
+            </>
+          ) : isResetSuccess ? (
+            <>
+              A sua palavra-passe foi alterada com sucesso.
+              <br />
+              Por favor, inicie sessão com as suas novas credenciais.
             </>
           ) : isValidated ? (
             <>

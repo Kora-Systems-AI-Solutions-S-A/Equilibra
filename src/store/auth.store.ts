@@ -7,7 +7,7 @@ import { useDebtPlansStore } from './debtPlans.store';
 import { useInvestmentsStore } from './investments.store';
 import { useNotificationStore } from './notification.store';
 
-export type AuthStep = 'form' | 'email-confirmation' | 'reset-confirmation' | 'email-validated';
+export type AuthStep = 'form' | 'email-confirmation' | 'reset-confirmation' | 'email-validated' | 'password-reset-success';
 
 interface AuthState {
   user: User | null;

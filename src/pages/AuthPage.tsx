@@ -15,7 +15,7 @@ export const AuthPage = () => {
 
   useEffect(() => {
     if (isInitialized) {
-      if (isAuthenticated && authStep !== 'email-validated') {
+      if (isAuthenticated && authStep !== 'email-validated' && authStep !== 'password-reset-success') {
         navigate('/home', { replace: true });
       } else {
         // We are on the auth page and not authenticated, so we can stop loading
