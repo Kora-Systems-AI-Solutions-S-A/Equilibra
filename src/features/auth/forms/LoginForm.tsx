@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/Button';
 import { FloatingLabelInput } from '@/shared/ui/FloatingLabelInput';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useAuthStore } from '@/store/auth.store';
+import { useNotificationStore } from '@/store/notification.store';
 import { useUIStore } from '@/store/ui.store';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
@@ -11,8 +12,13 @@ interface LoginFormProps {
   mode: 'login' | 'register' | 'forgot-password';
 }
 
+// Validação local de formato de email
+const isValidEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, mode }) => {
-  const { login, loginWithGoogle, error, clearError } = useAuthStore();
+  const { login, loginWithGoogle, clearError } = useAuthStore();
+  const { showNotification } = useNotificationStore();
   const { setPageTransitionLoading } = useUIStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,12 +36,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, mode }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validação local — feedback exclusivo via toast
+    if (!email.trim() || !password.trim()) {
+      showNotification('Preencha todos os campos.', 'error');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showNotification('Introduza um endereço de email válido.', 'error');
+      return;
+    }
+
+    // Loading global APENAS para a transição de login → dashboard
     setPageTransitionLoading(true, "A preparar o seu dashboard...");
     try {
       await login(email, password);
-    } catch (err) {
+      // O onAuthStateChange cuidará do preenchimento da sessão e redirecionamento
+    } catch (err: any) {
+      showNotification(err.message || 'Erro ao entrar. Tente novamente.', 'error');
       setPageTransitionLoading(false);
-      // Error is handled by store
     }
   };
 
@@ -43,9 +63,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, mode }) => {
     setPageTransitionLoading(true, "A preparar o seu dashboard...");
     try {
       await loginWithGoogle();
-    } catch (err) {
+    } catch (err: any) {
       setPageTransitionLoading(false);
-      // Error is handled by store
+      showNotification(err.message || 'Erro ao entrar com Google.', 'error');
     }
   };
 
@@ -79,31 +99,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, mode }) => {
       </div>
 
       <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
-        <AnimatePresence mode="wait">
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-3 mb-6"
-            >
-              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[11px] font-bold">!</div>
-              {error}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <div className="space-y-3 sm:space-y-4">
           <FloatingLabelInput
             label="Endereço de Email"
             type="email"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (error) clearError();
-            }}
+            onChange={(e) => setEmail(e.target.value)}
             required
-            autoComplete="email"
+            autoComplete="off"
             icon={<Mail size={20} />}
           />
 
@@ -112,12 +115,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, mode }) => {
               label="Palavra-passe"
               type={showPassword ? 'text' : 'password'}
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (error) clearError();
-              }}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
               icon={<Lock size={20} />}
             />
             <button 

@@ -23,7 +23,6 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
 
 import { getCurrentMonthYear, addMonthsToMonthYear, getMonthsDifference, getMonthsBetween } from '@/lib/date';
-import { NotificationContainer } from '@/shared/ui/NotificationContainer';
 
 const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
@@ -579,7 +578,6 @@ export const AppShell = () => {
       </DrawerBase>
       <InvestmentContributionModal />
       <CreateInvestmentModal />
-      <NotificationContainer />
     </div>
   );
 };

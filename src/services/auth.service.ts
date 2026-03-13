@@ -13,10 +13,10 @@ export const authService = {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        throw new Error('Credenciais inválidas. Verifique seu e-mail e senha.');
+      if (error.status === 400 || error.message.toLowerCase().includes('invalid')) {
+        throw new Error('Credenciais inválidas. Verifique o seu email e palavra-passe.');
       }
-      throw new Error(error.message);
+      throw new Error('Ocorreu um erro ao entrar. Tente novamente.');
     }
 
     if (!data.session) {
@@ -60,8 +60,8 @@ export const authService = {
     throw new Error('Utilize o useAuthStore para capturar o ID síncrono da sessão ativa.');
   },
 
-  async register(name: string, email: string, password: string): Promise<Session> {
-    const { data, error } = await supabase.auth.signUp({
+  async register(name: string, email: string, password: string): Promise<void> {
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -73,16 +73,9 @@ export const authService = {
 
     if (error) throw new Error(error.message);
 
-    if (!data.session) {
-      // Supabase Email Confirmations are enabled by default on new projects
-      // The session is null until they click the verification link
-      throw new Error('Conta criada! Por favor, verifique sua caixa de entrada para confirmar o e-mail antes de logar.');
-    }
-
-    return {
-      user: mapSupabaseUser(data.user),
-      accessToken: data.session.access_token,
-    };
+    // Registo com sucesso — a confirmação de email está ativa por defeito no Supabase.
+    // A sessão será null até o utilizador confirmar o email.
+    // O fluxo de transição para o ecrã de confirmação é gerido pela store.
   },
 
   async sendPasswordResetEmail(email: string): Promise<void> {
@@ -101,6 +94,21 @@ export const authService = {
         throw new Error('Link de recuperação inválido ou expirado. Solicita um novo.');
       }
       throw new Error('Erro ao actualizar a palavra-passe. Tenta novamente.');
+    }
+  },
+
+  async resendConfirmationEmail(email: string): Promise<void> {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+
+    if (error) {
+      // Mapeamos erros do Supabase para mensagens amigáveis
+      if (error.message.toLowerCase().includes('rate limit')) {
+        throw new Error('Aguarda alguns minutos antes de tentar novamente.');
+      }
+      throw new Error('Não foi possível reenviar o email. Tenta novamente.');
     }
   },
 };

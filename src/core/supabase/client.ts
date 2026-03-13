@@ -1,6 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
+// Captura o hash original antes de o SDK do Supabase o limpar automaticamente.
+// Usamos 'let' para permitir o reset após o consumo na store.
+export let initialLocationHash = typeof window !== 'undefined' ? window.location.hash : '';
+
+export const resetInitialHash = () => {
+  initialLocationHash = '';
+};
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -12,5 +20,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient<Database>(
   supabaseUrl,
-  supabaseAnonKey
+  supabaseAnonKey,
+  {
+    auth: {
+      debug: false,
+    },
+  }
 );

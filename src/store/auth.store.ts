@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import { authService } from '@/services/auth.service';
 import { User, Session } from '@/models/user.model';
-import { supabase } from '@/core/supabase/client';
+import { supabase, initialLocationHash, resetInitialHash } from '@/core/supabase/client';
 import { useMonthlyRecordsStore } from './monthlyRecords.store';
 import { useDebtPlansStore } from './debtPlans.store';
 import { useInvestmentsStore } from './investments.store';
+import { useNotificationStore } from './notification.store';
+
+export type AuthStep = 'form' | 'email-confirmation' | 'reset-confirmation' | 'email-validated';
 
 interface AuthState {
   user: User | null;
@@ -13,6 +16,8 @@ interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
+  lastRegisteredEmail: string | null;
+  authStep: AuthStep;
 
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -22,15 +27,24 @@ interface AuthState {
   clearError: () => void;
   sendPasswordResetEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<void>;
+  setAuthStep: (step: AuthStep) => void;
+  reset: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const initialState = {
   user: null,
   session: null,
   isAuthenticated: false,
   isLoading: false,
   isInitialized: false,
   error: null,
+  lastRegisteredEmail: null,
+  authStep: (initialLocationHash.includes('type=signup') ? 'email-validated' : 'form') as AuthStep,
+};
+
+export const useAuthStore = create<AuthState>((set) => ({
+  ...initialState,
 
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
@@ -63,9 +77,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       await authService.register(name, email, password);
+      // Registo com sucesso — guardar email e transitar para o ecrã de confirmação
+      set({
+        lastRegisteredEmail: email,
+        authStep: 'email-confirmation',
+        isLoading: false,
+      });
     } catch (error: any) {
       set({
-        // Se a confirmação de e-mail estiver ativa, a service fornece o feedback adequado
         error: error.message || 'Erro ao cadastrar. Tente novamente.',
         isLoading: false,
       });
@@ -137,6 +156,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
+
+  resendConfirmationEmail: async (email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authService.resendConfirmationEmail(email);
+      set({ isLoading: false });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Erro ao reenviar email de confirmação.',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  setAuthStep: (step: AuthStep) => set({ authStep: step }),
+
+  reset: () => set({ ...initialState, isInitialized: true }),
 }));
 
 // Inicializa o listener de mudanças de sessão do Supabase.
@@ -144,6 +181,28 @@ export const useAuthStore = create<AuthState>((set) => ({
 // Retorna a função de unsubscribe para evitar memory leak.
 export const initializeAuthListener = () => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Deteção de SIGNED_IN originado por confirmação de email
+    // Usamos o initialLocationHash capturado no momento do carregamento do módulo
+    const isEmailConfirmation = initialLocationHash.includes('type=signup');
+
+    if (isEmailConfirmation && session) {
+      // Reset da variável para evitar redeteções em trocas de sessão na mesma tab
+      resetInitialHash();
+      // Confirmação de email detetada — não autenticar automaticamente
+      // Executar logout imediato e notificar o utilizador via toast
+      supabase.auth.signOut().then(() => {
+        useAuthStore.setState({ authStep: 'email-validated' });
+        useNotificationStore.getState().showNotification(
+          'E-mail confirmado com sucesso! Já pode fazer login.',
+          'success'
+        );
+      });
+
+      // Limpar o hash da URL para evitar reprocessamento
+      window.history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+
     if (session) {
       useAuthStore.setState({
         session: {
@@ -177,6 +236,8 @@ export const initializeAuthListener = () => {
         isAuthenticated: false,
         isInitialized: true,
         isLoading: false,
+        lastRegisteredEmail: null,
+        authStep: useAuthStore.getState().authStep === 'email-validated' ? 'email-validated' : 'form',
       });
     }
   });

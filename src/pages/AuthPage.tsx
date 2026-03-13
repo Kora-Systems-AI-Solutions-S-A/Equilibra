@@ -6,7 +6,7 @@ import { AuthContainer } from '@/features/auth';
 
 export const AuthPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isInitialized, checkAuth } = useAuthStore();
+  const { isAuthenticated, isInitialized, authStep, checkAuth } = useAuthStore();
   const { setPageTransitionLoading } = useUIStore();
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export const AuthPage = () => {
 
   useEffect(() => {
     if (isInitialized) {
-      if (isAuthenticated) {
+      if (isAuthenticated && authStep !== 'email-validated') {
         navigate('/home', { replace: true });
       } else {
         // We are on the auth page and not authenticated, so we can stop loading

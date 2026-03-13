@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/Button';
 import { FloatingLabelInput } from '@/shared/ui/FloatingLabelInput';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useAuthStore } from '@/store/auth.store';
+import { useNotificationStore } from '@/store/notification.store';
 import { useUIStore } from '@/store/ui.store';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
@@ -11,13 +12,19 @@ interface RegisterFormProps {
   mode: 'login' | 'register' | 'forgot-password';
 }
 
+// Validação local de formato de email
+const isValidEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }) => {
-  const { register, loginWithGoogle, error, clearError } = useAuthStore();
+  const { register, loginWithGoogle, clearError } = useAuthStore();
+  const { showNotification } = useNotificationStore();
   const { setPageTransitionLoading } = useUIStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Limpa o formulário ao alternar entre Login e Cadastro
   useEffect(() => {
@@ -32,12 +39,32 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPageTransitionLoading(true, "A preparar o seu dashboard...");
+
+    // Validação local — feedback exclusivo via toast
+    if (!name.trim()) {
+      showNotification('Preencha o nome completo.', 'error');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showNotification('Introduza um endereço de email válido.', 'error');
+      return;
+    }
+
+    if (password.length < 8) {
+      showNotification('A palavra-passe deve ter pelo menos 8 caracteres.', 'error');
+      return;
+    }
+
+    // Sem loading global — apenas estado local no botão
+    setIsSubmitting(true);
     try {
       await register(name, email, password);
-    } catch (err) {
-      setPageTransitionLoading(false);
-      // Error is handled by store
+      // A store gere a transição para o ecrã de confirmação via authStep
+    } catch (err: any) {
+      showNotification(err.message || 'Erro ao criar conta.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -45,9 +72,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }
     setPageTransitionLoading(true, "A preparar o seu dashboard...");
     try {
       await loginWithGoogle();
-    } catch (err) {
+    } catch (err: any) {
       setPageTransitionLoading(false);
-      // Error is handled by store
+      showNotification(err.message || 'Erro ao entrar com Google.', 'error');
     }
   };
 
@@ -81,20 +108,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }
       </div>
 
       <form onSubmit={handleRegister} className="space-y-4 sm:space-y-5">
-        <AnimatePresence mode="wait">
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-3 mb-6"
-            >
-              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[11px] font-bold">!</div>
-              {error}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <div className="space-y-3 sm:space-y-4">
           <FloatingLabelInput
             label="Nome Completo"
@@ -109,10 +122,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }
             label="Endereço de Email"
             type="email"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (error) clearError();
-            }}
+            onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
             icon={<Mail size={20} />}
@@ -123,10 +133,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }
               label="Palavra-passe"
               type={showPassword ? 'text' : 'password'}
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (error) clearError();
-              }}
+              onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
               icon={<Lock size={20} />}
@@ -144,9 +151,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode, mode }
         <div className="space-y-3 sm:space-y-4 pt-2">
           <Button 
             type="submit" 
-            className="w-full h-12 sm:h-14 rounded-xl text-[14px] font-black shadow-[0_20px_40px_rgba(74,222,128,0.25)] hover:shadow-[0_24px_48px_rgba(74,222,128,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+            disabled={isSubmitting}
+            className="w-full h-12 sm:h-14 rounded-xl text-[14px] font-black shadow-[0_20px_40px_rgba(74,222,128,0.25)] hover:shadow-[0_24px_48px_rgba(74,222,128,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
           >
-            Criar minha conta
+            {isSubmitting ? 'A criar conta...' : 'Criar minha conta'}
           </Button>
 
           <div className="flex items-center gap-4 py-2">
